@@ -27,7 +27,7 @@ const { writeCSV, updateQuestionMappingInCSV } = require('../helpers/migrationcs
 const createProgramAndQuestionsets = async (solutions, migratedCount) => {
   for (let solution of solutions) {
     let programId = solution?.migrationReference?.sourcingProgramId;
-    // To makesure program is migrated, updated, published, nominated and contributor is added
+    // To make sure program is migrated, updated, published, nominated and contributor is added
     const programData = await createProgramTemplate(
       solution,
       migratedCount
@@ -492,8 +492,8 @@ const getMatrixSectionData = async (
   matrixQuestionIds,
   allQuestionsFromAllSections,
   solutionType,
-  solutionId,
-  referenceQuestionsetId,
+  solutionId, // solution-id
+  referenceQuestionsetId, // migrated-solution-id
   sections, //section list 
   existingCriteriaQuestions,
   migratedCount
@@ -570,7 +570,21 @@ const getMatrixSectionData = async (
         let migratedQuestion = await createQuestionTemplate(
           question,
           migratedCount
-        );
+        ).catch((err) => {
+          updateQuestionMappingInCSV({
+            "solutionId": solutionId,
+            "criteriaId": '',
+            "questionsetId": referenceQuestionsetId,
+            questions: {
+              [qid]: {
+                id: '',
+                status: '',
+                isFailed: 'YES',
+                reasons: `${JSON.stringify(err?.response?.data)}`
+              }
+            }
+          })
+        });
 
         updateQuestionMappingInCSV({
           "solutionId": solutionId,
@@ -622,8 +636,8 @@ const getNonMatrixSectionData = async (
   nonMatrixQuestionIds,
   allQuestionsFromAllSections,
   solutionType,
-  solutionId,
-  referenceQuestionsetId,
+  solutionId, // solution-id
+  referenceQuestionsetId, // migrated-solution-id  
   sections,
   existingCriteriaQuestions,
   migratedCount) => {
@@ -661,7 +675,20 @@ const getNonMatrixSectionData = async (
           let migratedQuestion = await createQuestionTemplate(
             question,
             migratedCount
-          );
+          ).catch((error) => {
+            updateQuestionMappingInCSV({
+              "solutionId": solutionId,
+              "questionsetId": referenceQuestionsetId,
+              questions: {
+                [qid]: {
+                  id: '',
+                  status: '',
+                  isFailed: 'YES',
+                  reasons: `${JSON.stringify(error?.response?.data)}`
+                }
+              }
+            })
+          });
 
           updateQuestionMappingInCSV({
             "solutionId": solutionId,
@@ -740,7 +767,21 @@ const getNonMatrixSectionData = async (
             let migratedQuestion = await createQuestionTemplate(
               question,
               migratedCount
-            );
+            ).catch((err) => {
+              updateQuestionMappingInCSV({
+                "solutionId": solutionId,
+                "criteriaId": '',
+                "questionsetId": referenceQuestionsetId,
+                questions: {
+                  [qid]: {
+                    id: '',
+                    status: '',
+                    isFailed: 'No',
+                    reasons: `${JSON.stringify(err?.response?.data)}`
+                  }
+                }
+              })
+            });
 
             updateQuestionMappingInCSV({
               "solutionId": solutionId,
@@ -759,7 +800,21 @@ const getNonMatrixSectionData = async (
             let parentMigratedQuestion = await createQuestionTemplate(
               parentQuestion,
               migratedCount
-            );
+            ).catch((err) => {
+              updateQuestionMappingInCSV({
+                "solutionId": solutionId,
+                "criteriaId": '',
+                "questionsetId": referenceQuestionsetId,
+                questions: {
+                  [parentQuestion._id]: {
+                    id: '',
+                    status: '',
+                    isFailed: 'YES',
+                    reasons: `${JSON.stringify(err?.response?.data)}`
+                  }
+                }
+              })
+            });
 
             updateQuestionMappingInCSV({
               "solutionId": solutionId,
@@ -835,7 +890,21 @@ const getNonMatrixSectionData = async (
           let migratedQuestion = await createQuestionTemplate(
             question,
             migratedCount
-          );
+          ).catch((err) => {
+            updateQuestionMappingInCSV({
+              "solutionId": solutionId,
+              "criteriaId": '',
+              "questionsetId": referenceQuestionsetId,
+              questions: {
+                [qid]: {
+                  id: '',
+                  status: '',
+                  isFailed: 'YES',
+                  reasons: `${JSON.stringify(err?.response?.data)}`
+                }
+              }
+            })
+          });
 
           updateQuestionMappingInCSV({
             "solutionId": solutionId,

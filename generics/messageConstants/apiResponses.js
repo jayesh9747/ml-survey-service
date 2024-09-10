@@ -377,5 +377,6 @@ module.exports = {
     "KEYS_ALREADY_INDEXED": 'Keys already indexed',
     "FAILED_TO_START_RESOURCE": "There was an error in starting/joining. Please try again after some time.",
     "SOLUTION_IS_NOT_MIGRATED": "Required solution referenceQuestionSetId",
-    "QUESTIONSET_NOT_FOUND": "Question set not found"
+    "QUESTIONSET_NOT_FOUND": "Question set not found",
+    "OBSERVATION_OVERVIEW_INFORMATION_FETCHED":'Observation overview information fetched successfully'
 }

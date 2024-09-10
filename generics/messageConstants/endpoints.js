@@ -25,9 +25,9 @@ module.exports = {
   GET_SCHOOL_DATA: "/v1/org/search",
   JOIN_PROGRAM: "/v1/programs/join",
   COPY_QUESTION_SET: "/api/questionset/v1/copy",
-  READ_QUESTION_SET: "/action/questionset/v1/hierarchy",
+  READ_QUESTION_SET: "/api/questionset/v1/hierarchy",
   UPDATE_QUESTION_SET_HIERARCHY: "/api/questionset/v1/hierarchy/update",
   PUBLISH_QUESTION_SET: "/api/questionset/v1/publish",
   UPDATE_QUESTION_SET: "/api/questionset/v1/update",
-  READ_QUESTION: "api/question/v1/read",
+  READ_QUESTION: "/api/question/v1/read",
 };

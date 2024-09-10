@@ -27,6 +27,8 @@ const questionsHelper = require(MODULES_BASE_PATH + "/questions/helper");
 const userProfileService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const programJoinEnabled = process.env.PROGRAM_JOIN_ON_OFF
+const transFormationHelper = require(MODULES_BASE_PATH + "/questions/transformationHelper");
+
 /**
  * SurveysHelper
  * @class
@@ -652,15 +654,13 @@ module.exports = class SurveysHelper {
           let errorObject = {
             formData: {
               userId: userId,
-              message: `Failed to push notification for survey ${surveyData.surveyId.toString()} in the solution ${
-                surveyData.solutionName
-              }`,
+              message: `Failed to push notification for survey ${surveyData.surveyId.toString()} in the solution ${surveyData.solutionName
+                }`,
             },
           };
           console.log(errorObject);
           throw new Error(
-            `Failed to push notification for survey ${surveyData.surveyId.toString()} in the solution ${
-              surveyData.solutionName
+            `Failed to push notification for survey ${surveyData.surveyId.toString()} in the solution ${surveyData.solutionName
             }`
           );
         }
@@ -699,7 +699,8 @@ module.exports = class SurveysHelper {
     roleInformation = {},
     version = "",
     appVersion = "",
-    appName = ""
+    appName = "",
+    isTransformationRequired = ""
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -798,7 +799,8 @@ module.exports = class SurveysHelper {
           roleInformation,
           token,
           appVersion,
-          appName
+          appName,
+          isTransformationRequired,
         );
 
         if (!surveyDetails.success) {
@@ -839,7 +841,8 @@ module.exports = class SurveysHelper {
     roleInformation = {},
     userToken = "",
     appVersion = "",
-    appName = ""
+    appName = "",
+    isTransformationRequired = false,
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -874,16 +877,27 @@ module.exports = class SurveysHelper {
 
         let solutionDocument = await solutionsHelper.solutionDocuments(
           solutionQueryObject,
-          solutionDocumentProjectionFields
+          [...solutionDocumentProjectionFields, "referenceQuestionSetId", "type"],
         );
 
         if (!solutionDocument.length) {
           throw new Error(messageConstants.apiResponses.SOLUTION_NOT_FOUND);
         }
 
+        let referenceQuestionSetId = solutionDocument[0]?.referenceQuestionSetId;
+
+        if (isTransformationRequired) {
+          referenceQuestionSetId = solutionDocument[0]?.referenceQuestionSetId;
+
+          if (!referenceQuestionSetId) {
+            throw new Error(messageConstants.apiResponses.SOLUTION_IS_NOT_MIGRATED)
+          }
+        }
+
         solutionDocument = solutionDocument[0];
 
         let endDateCheckRequired = true;
+        // let endDateCheckRequired = false;
 
         if (submissionId != "") {
           let submissionDocument =
@@ -999,6 +1013,14 @@ module.exports = class SurveysHelper {
         });
 
         submissionDocumentEvidences = solutionDocument.evidenceMethods;
+
+        let evidences = {};
+
+        if (isTransformationRequired && referenceQuestionSetId) {
+          solutionDocument._id = referenceQuestionSetId;
+          console.log("here i am fetch the question set hierarchy")
+          evidences = await transFormationHelper.getQuestionSetHierarchy(submissionDocumentCriterias, solutionDocument);
+        }
 
         let criteria = criteriaQuestionDocument[0];
 
@@ -1119,7 +1141,7 @@ module.exports = class SurveysHelper {
             status: messageConstants.common.SUBMISSION_STATUS_STARTED,
             evidences: submissionDocumentEvidences,
             evidencesStatus: Object.values(submissionDocumentEvidences),
-            criteria: submissionDocumentCriterias,
+            criteria: isTransformationRequired ? evidences.submissionDocumentCriterias : submissionDocumentCriterias,
             surveyInformation: {
               ..._.omit(surveyDocument, ["_id", "deleted", "__v"]),
             },
@@ -1192,7 +1214,7 @@ module.exports = class SurveysHelper {
             : false
         );
 
-        assessment.evidences = parsedAssessment.evidences;
+        assessment.evidences = isTransformationRequired ? evidences.evidences : parsedAssessment.evidences;
         assessment.submissions = parsedAssessment.submissions;
         if (
           parsedAssessment.generalQuestions &&
@@ -1718,7 +1740,8 @@ module.exports = class SurveysHelper {
     userId = "",
     token = "",
     appVersion = "",
-    appName = ""
+    appName = "",
+    isTransformationRequired = true
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -1751,7 +1774,8 @@ module.exports = class SurveysHelper {
           bodyData,
           token,
           appVersion,
-          appName
+          appName,
+          isTransformationRequired
         );
 
         if (!surveyDetails.success) {

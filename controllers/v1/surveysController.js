@@ -648,7 +648,8 @@ module.exports = class Surveys extends Abstract {
                     req.userDetails.userId,
                     req.userDetails.userToken,
                     appVersion,
-                    appName
+                    appName,
+                    true
                 );
                 
             } else {
@@ -662,7 +663,8 @@ module.exports = class Surveys extends Abstract {
                     bodyData,
                     "",
                     appVersion,
-                    appName
+                    appName,
+                    true
                 );
             }
 

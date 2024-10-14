@@ -463,7 +463,14 @@ module.exports = class ProgramsHelper {
         }
         const copyQuestionSetRes = await questionSetService.copyQuestionSet(copyReq, questionSetId)
         const copiedQuestionsetId = copyQuestionSetRes.result.node_id[questionSetId]
-        const readRes = await questionSetService.readQuestionSet(copiedQuestionsetId)
+        const readRes = await questionSetService.readQuestionSet(copiedQuestionsetId);
+        if (!readRes || !readRes.result || !readRes.result.questionSet) {
+          return {
+            success: false,
+            status: httpStatusCode.bad_request.status,
+            message: messageConstants.apiResponses.QUESTIONSET_NOT_FOUND
+          };
+        }
         let readQuestionSetRes = readRes.result.questionSet
         let updateRequest = {
           request: {
@@ -547,60 +554,76 @@ module.exports = class ProgramsHelper {
 * @returns {JSON} - Removed entities data.
 */
 
-  static mapUpdateObservation(solutionId, updateReq) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let solutionDocument = await database.models.solutions.findOne({
-          _id: solutionId,
-        }).lean()
-        if (!solutionDocument) {
-          return resolve({
-            message: messageConstants.apiResponses.SOLUTION_NOT_FOUND,
-            status: httpStatusCode.bad_request.status,
-          });
-        }
-        const updateRes = await questionSetService.updateQuestionSet(updateReq, solutionDocument.migratedId)
-        if (updateRes.status === 200) {
-          const publishQuestionSetRes = await questionSetService.publishQuestionSet(solutionDocument.migratedId)
-          if (publishQuestionSetRes.status === 200) {
-            let updateQuery = {};
-            updateQuery["$set"] = {};
-            if (updateReq.name) {
-              updateQuery["$set"]["name"] = updateReq.name;
-            }
-            if (updateReq.description) {
-              updateQuery["$set"]["description"] = updateReq.description;
-            }
-            if (updateReq.startDate) {
-              updateQuery["$set"]["startDate"] = updateReq.startDate;
-            }
-            if (updateReq.startDate) {
-              updateQuery["$set"]["endDate"] = updateReq.endDate;
-            }
-            if (updateReq.status) {
-              updateQuery["$set"]["status"] = updateReq.status;
-            }
-            let updatedSolutionDoc = await database.models.solutions.updateOne(
-              {
-                _id: solutionId,
-              },
-              updateQuery
-            ).lean();
-            return resolve({
-              message: messageConstants.apiResponses.OBSERVATION_UPDATED,
-            });
+static mapUpdateObservation(solutionId, updateReq) {
+  return new Promise(async (resolve, reject) => {
+    try {
 
-          }
-        }
-      } catch (error) {
+      let solutionDocument = await database.models.solutions.findOne({
+        _id: solutionId,
+      }).lean();
+
+      if (!solutionDocument) {
         return resolve({
           success: false,
-          status: error.status ?
-            error.status : httpStatusCode['internal_server_error'].status,
-          message: error.message
-        })
+          status: httpStatusCode.bad_request.status,
+          message: messageConstants.apiResponses.SOLUTION_NOT_FOUND,
+        });
       }
-    })
-  }
+
+      const updateRes = await questionSetService.updateQuestionSet(updateReq, solutionDocument.migratedId);
+      if (updateRes.status !== 200) {
+        throw {
+          success: false,
+          status: updateRes.status,
+          message: messageConstants.apiResponses.FAILED_TO_UPDATE_QUESTIONSET,
+        };
+      }
+
+      const publishQuestionSetRes = await questionSetService.publishQuestionSet(solutionDocument.migratedId);
+      if (publishQuestionSetRes.status !== 200) {
+        throw {
+          success: false,
+          status: publishQuestionSetRes.status,
+          message: messageConstants.apiResponses.FAILED_TO_PUBLISH_QUESTIONSET,
+        };
+      }
+
+      let updateQuery = { "$set": {} };
+      if (updateReq.name) {
+        updateQuery["$set"]["name"] = updateReq.name;
+      }
+      if (updateReq.description) {
+        updateQuery["$set"]["description"] = updateReq.description;
+      }
+      if (updateReq.startDate) {
+        updateQuery["$set"]["startDate"] = updateReq.startDate;
+      }
+      if (updateReq.endDate) {
+        updateQuery["$set"]["endDate"] = updateReq.endDate;
+      }
+      if (updateReq.status) {
+        updateQuery["$set"]["status"] = updateReq.status;
+      }
+
+      let updatedSolutionDoc = await database.models.solutions.updateOne(
+        { _id: solutionId },
+        updateQuery
+      ).lean();
+
+      return resolve({
+        success: true,
+        status: httpStatusCode.ok.status,
+        message: messageConstants.apiResponses.OBSERVATION_UPDATED,
+      });
+
+    } catch (error) {
+      return resolve({
+        success: false,
+        status: error.status ? error.status : httpStatusCode['internal_server_error'].status,
+        message: error.message || 'Internal server error',
+      });
+    }
+  });
+}
 
 };

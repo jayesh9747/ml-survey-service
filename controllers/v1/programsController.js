@@ -795,7 +795,6 @@ module.exports = class Programs extends Abstract {
    * @param {Object} req - requested data.
    * @returns {JSON} - 
    */
-
   async mapObservation(req) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -855,7 +854,6 @@ module.exports = class Programs extends Abstract {
 
         let programUpdated = await programsHelper.mapUpdateObservation(
           req.params.solutionId, req.body
-
         );
 
         return resolve(programUpdated);

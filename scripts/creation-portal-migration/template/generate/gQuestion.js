@@ -1,13 +1,13 @@
 const { questionTemplate, questionStatic } = require("../config/question");
 
 /**
-* To map the body field data 
-* @method
-* @name getQBodyParagraph
-* @param {Object} questionData - questionData
-* @returns {String} - returns mapped body field data with p tag
-**/
-const getQBodyParagraph = (questionData) => {
+ * To map the body field data
+ * @method
+ * @name getQuestionBodyParagraph
+ * @param {Object} questionData - questionData
+ * @returns {String} - returns mapped body field data with p tag
+ **/
+const getQuestionBodyParagraph = (questionData) => {
   return questionData
     .map((data) => {
       return `<p>${data}</p>`;
@@ -16,13 +16,13 @@ const getQBodyParagraph = (questionData) => {
 };
 
 /**
-* To map the body field data  with div tag
-* @method
-* @name getQBodyDiv
-* @param {Object} questionData - questionData
-* @returns {String} - returns mapped body field data with div tag
-**/
-const getQBodyDiv = (questionData) => {
+ * To map the body field data  with div tag
+ * @method
+ * @name getQuestionBodyDiv
+ * @param {Object} questionData - questionData
+ * @returns {String} - returns mapped body field data with div tag
+ **/
+const getQuestionBodyDiv = (questionData) => {
   const divs = questionData
     .map((data) => {
       return `<div class='mcq-title'><p>${data}&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div>`;
@@ -33,46 +33,54 @@ const getQBodyDiv = (questionData) => {
 };
 
 /**
-* To map the question type date
-* @method
-* @name getDateTemplate
-* @param {Object} question - question
-* @returns {Object} - returns mapped date type question
-**/
+ * To map the question type date
+ * @method
+ * @name getDateTemplate
+ * @param {Object} question - question
+ * @returns {Object} - returns mapped date type question
+ **/
 const getDateTemplate = (question) => {
   const template = {};
   console.log("getDate");
 
   for (let key in questionTemplate.date) {
-    const keyL = key.toLowerCase();
-    let date = question["dateFormat"] ? question["dateFormat"].replace("-", "/") : "";
+    const keyInLowerCase = key.toLowerCase();
+    let date = question["dateFormat"]
+      ? question["dateFormat"].replace("-", "/")
+      : "";
 
     if (questionStatic.date.includes(key)) {
       template[key] = questionTemplate.date[key];
     } else {
-      switch (keyL) {
+      switch (keyInLowerCase) {
         case "interactiontypes":
           template[key] = [question[questionTemplate.date[key]]];
           break;
 
         case "body":
-          template[key] = getQBodyParagraph(question[questionTemplate.date[key]]);
+          template[key] = getQuestionBodyParagraph(
+            question[questionTemplate.date[key]]
+          );
           break;
 
         case "editorstate":
           template[key] = {
-            question: getQBodyParagraph(question[questionTemplate.date["body"]]),
+            question: getQuestionBodyParagraph(
+              question[questionTemplate.date["body"]]
+            ),
           };
           break;
 
         case "interactions":
           template[key] = {
             validation: {
-              required: question["validation"]["required"] ? 'Yes' : 'No',
+              required: question["validation"]["required"] ? "Yes" : "No",
             },
             response1: {
               validation: {
-                pattern: question["dateFormat"] ? date.replace("-", "/") : question["dateFormat"],
+                pattern: question["dateFormat"]
+                  ? date.replace("-", "/")
+                  : question["dateFormat"],
               },
               autoCapture: question["autoCapture"],
             },
@@ -84,7 +92,7 @@ const getDateTemplate = (question) => {
             ? { ...question["file"], mimeType: question["file"]["type"] }
             : { mimeType: [] };
           if (question?.file) {
-            template['showEvidence'] = "Yes"
+            template["showEvidence"] = "Yes";
           }
           break;
 
@@ -93,11 +101,15 @@ const getDateTemplate = (question) => {
           break;
 
         case "showremarks":
-          template[key] = question[questionTemplate.date[key]] === true ? 'Yes' : 'No';
+          template[key] =
+            question[questionTemplate.date[key]] === true ? "Yes" : "No";
           break;
 
         case "name":
-          template[key] = question[questionTemplate.date[key]]?.length > 0 ? question[questionTemplate.date[key]][0] : "Question"
+          template[key] =
+            question[questionTemplate.date[key]]?.length > 0
+              ? question[questionTemplate.date[key]][0]
+              : "Question";
           break;
 
         default:
@@ -111,12 +123,12 @@ const getDateTemplate = (question) => {
 };
 
 /**
-* To map the question type slider
-* @method
-* @name getSliderTemplate
-* @param {Object} question - question
-* @returns {Object} - returns mapped slider type question
-**/
+ * To map the question type slider
+ * @method
+ * @name getSliderTemplate
+ * @param {Object} question - question
+ * @returns {Object} - returns mapped slider type question
+ **/
 const getSliderTemplate = (question) => {
   const template = {};
   console.log("getSlider");
@@ -132,19 +144,23 @@ const getSliderTemplate = (question) => {
           break;
 
         case "body":
-          template[key] = getQBodyParagraph(question[questionTemplate.slider[key]]);
+          template[key] = getQuestionBodyParagraph(
+            question[questionTemplate.slider[key]]
+          );
           break;
 
         case "editorstate":
           template[key] = {
-            question: getQBodyParagraph(question[questionTemplate.slider["body"]]),
+            question: getQuestionBodyParagraph(
+              question[questionTemplate.slider["body"]]
+            ),
           };
           break;
 
         case "interactions":
           template[key] = {
             validation: {
-              required: question["validation"]["required"] ? 'Yes' : 'No',
+              required: question["validation"]["required"] ? "Yes" : "No",
             },
             response1: {
               validation: {
@@ -163,7 +179,7 @@ const getSliderTemplate = (question) => {
             ? { ...question["file"], mimeType: question["file"]["type"] }
             : { mimeType: [] };
           if (question?.file) {
-            template['showEvidence'] = "Yes"
+            template["showEvidence"] = "Yes";
           }
           break;
 
@@ -172,11 +188,15 @@ const getSliderTemplate = (question) => {
           break;
 
         case "showremarks":
-          template[key] = question[questionTemplate.slider[key]] === true ? 'Yes' : 'No';
+          template[key] =
+            question[questionTemplate.slider[key]] === true ? "Yes" : "No";
           break;
 
         case "name":
-          template[key] = question[questionTemplate.slider[key]]?.length > 0 ? question[questionTemplate.slider[key]][0] : "Question"
+          template[key] =
+            question[questionTemplate.slider[key]]?.length > 0
+              ? question[questionTemplate.slider[key]][0]
+              : "Question";
           break;
 
         default:
@@ -190,12 +210,12 @@ const getSliderTemplate = (question) => {
 };
 
 /**
-* To get question options and update the object values as strings
-* @method
-* @name getOptions
-* @param {Object[]} options - options
-* @returns {Object[]} - returns options
-**/
+ * To get question options and update the object values as strings
+ * @method
+ * @name getOptions
+ * @param {Object[]} options - options
+ * @returns {Object[]} - returns options
+ **/
 
 const getOptions = (options) => {
   options.map((values, index) => {
@@ -206,12 +226,12 @@ const getOptions = (options) => {
 };
 
 /**
-* To get question options and update the object values
-* @method
-* @name getEditorOptions
-* @param {Object[]} options - options
-* @returns {Object[]} - returns options
-**/
+ * To get question options and update the object values
+ * @method
+ * @name getEditorOptions
+ * @param {Object[]} options - options
+ * @returns {Object[]} - returns options
+ **/
 const getEditorOptions = (options) => {
   const data = options.map((values, index) => {
     return {
@@ -226,17 +246,16 @@ const getEditorOptions = (options) => {
 };
 
 /**
-* To map the question type multiselect mcq
-* @method
-* @name getMSMCQTemplate
-* @param {Object} question - question
-* @returns {Object} - returns mapped multiselect mcq type question
-**/
-const getMSMCQTemplate = (question) => {
+ * To map the question type multiselect mcq
+ * @method
+ * @name getMultipleSelectMCQTemplate
+ * @param {Object} question - question
+ * @returns {Object} - returns mapped multiselect mcq type question
+ **/
+const getMultipleSelectMCQTemplate = (question) => {
   const template = {};
 
-  console.log("getMSMCQ");
-
+  console.log("getMultipleSelectMCQ");
 
   for (let key in questionTemplate.multiselect) {
     const keyL = key.toLowerCase();
@@ -249,12 +268,16 @@ const getMSMCQTemplate = (question) => {
           break;
 
         case "body":
-          template[key] = getQBodyDiv(question[questionTemplate.multiselect[key]]);
+          template[key] = getQuestionBodyDiv(
+            question[questionTemplate.multiselect[key]]
+          );
           break;
 
         case "editorstate":
           template[key] = {
-            question: getQBodyDiv(question[questionTemplate.multiselect["body"]]),
+            question: getQuestionBodyDiv(
+              question[questionTemplate.multiselect["body"]]
+            ),
             options: getEditorOptions(question["options"]),
           };
           break;
@@ -262,7 +285,7 @@ const getMSMCQTemplate = (question) => {
         case "interactions":
           template[key] = {
             validation: {
-              required: question["validation"]["required"] ? 'Yes' : 'No',
+              required: question["validation"]["required"] ? "Yes" : "No",
             },
             response1: {
               type: "choice",
@@ -276,7 +299,7 @@ const getMSMCQTemplate = (question) => {
             ? { ...question["file"], mimeType: question["file"]["type"] }
             : { mimeType: [] };
           if (question?.file) {
-            template['showEvidence'] = "Yes"
+            template["showEvidence"] = "Yes";
           }
           break;
 
@@ -285,11 +308,15 @@ const getMSMCQTemplate = (question) => {
           break;
 
         case "showremarks":
-          template[key] = question[questionTemplate.multiselect[key]] === true ? 'Yes' : 'No';
+          template[key] =
+            question[questionTemplate.multiselect[key]] === true ? "Yes" : "No";
           break;
 
         case "name":
-          template[key] = question[questionTemplate.multiselect[key]]?.length > 0 ? question[questionTemplate.multiselect[key]][0] : "Question"
+          template[key] =
+            question[questionTemplate.multiselect[key]]?.length > 0
+              ? question[questionTemplate.multiselect[key]][0]
+              : "Question";
           break;
 
         default:
@@ -303,17 +330,16 @@ const getMSMCQTemplate = (question) => {
 };
 
 /**
-* To map the question type mcq
-* @method
-* @name getMCQTemplate
-* @param {Object} question - question
-* @returns {Object} - returns mapped mcq type question
-**/
+ * To map the question type mcq
+ * @method
+ * @name getMCQTemplate
+ * @param {Object} question - question
+ * @returns {Object} - returns mapped mcq type question
+ **/
 const getMCQTemplate = (question) => {
   const template = {};
 
   console.log("getMcq");
-
 
   for (let key in questionTemplate.mcq) {
     const keyL = key.toLowerCase();
@@ -326,12 +352,12 @@ const getMCQTemplate = (question) => {
           break;
 
         case "body":
-          template[key] = getQBodyDiv(question[questionTemplate.mcq[key]]);
+          template[key] = getQuestionBodyDiv(question[questionTemplate.mcq[key]]);
           break;
 
         case "editorstate":
           template[key] = {
-            question: getQBodyDiv(question[questionTemplate.mcq["body"]]),
+            question: getQuestionBodyDiv(question[questionTemplate.mcq["body"]]),
             options: getEditorOptions(question["options"]),
           };
           break;
@@ -339,7 +365,7 @@ const getMCQTemplate = (question) => {
         case "interactions":
           template[key] = {
             validation: {
-              required: question["validation"]["required"] ? 'Yes' : 'No',
+              required: question["validation"]["required"] ? "Yes" : "No",
             },
             response1: {
               type: "choice",
@@ -353,7 +379,7 @@ const getMCQTemplate = (question) => {
             ? { ...question["file"], mimeType: question["file"]["type"] }
             : { mimeType: [] };
           if (question?.file) {
-            template['showEvidence'] = "Yes"
+            template["showEvidence"] = "Yes";
           }
           break;
 
@@ -362,11 +388,15 @@ const getMCQTemplate = (question) => {
           break;
 
         case "showremarks":
-          template[key] = question[questionTemplate.mcq[key]] === true ? 'Yes' : 'No';
+          template[key] =
+            question[questionTemplate.mcq[key]] === true ? "Yes" : "No";
           break;
 
         case "name":
-          template[key] = question[questionTemplate.mcq[key]]?.length > 0 ? question[questionTemplate.mcq[key]][0] : "Question"
+          template[key] =
+            question[questionTemplate.mcq[key]]?.length > 0
+              ? question[questionTemplate.mcq[key]][0]
+              : "Question";
           break;
 
         default:
@@ -380,16 +410,15 @@ const getMCQTemplate = (question) => {
 };
 
 /**
-* To map the question type text
-* @method
-* @name getTextTemplate
-* @param {Object} question - question
-* @returns {Object} - returns mapped text type question
-**/
+ * To map the question type text
+ * @method
+ * @name getTextTemplate
+ * @param {Object} question - question
+ * @returns {Object} - returns mapped text type question
+ **/
 const getTextTemplate = (question, type) => {
   const template = {};
   console.log("getText");
-
 
   for (let key in questionTemplate.text) {
     const keyL = key.toLowerCase();
@@ -402,19 +431,23 @@ const getTextTemplate = (question, type) => {
           break;
 
         case "body":
-          template[key] = getQBodyParagraph(question[questionTemplate.text[key]]);
+          template[key] = getQuestionBodyParagraph(
+            question[questionTemplate.text[key]]
+          );
           break;
 
         case "editorstate":
           template[key] = {
-            question: getQBodyParagraph(question[questionTemplate.text["body"]]),
+            question: getQuestionBodyParagraph(
+              question[questionTemplate.text["body"]]
+            ),
           };
           break;
 
         case "interactions":
           template[key] = {
             validation: {
-              required: question["validation"]["required"] ? 'Yes' : 'No',
+              required: question["validation"]["required"] ? "Yes" : "No",
             },
             response1: {
               validation: {
@@ -427,8 +460,8 @@ const getTextTemplate = (question, type) => {
                   type === "text"
                     ? "No"
                     : question["validation"]["IsNumber"]
-                      ? "Yes"
-                      : "No",
+                    ? "Yes"
+                    : "No",
               },
             },
           };
@@ -439,7 +472,7 @@ const getTextTemplate = (question, type) => {
             ? { ...question["file"], mimeType: question["file"]["type"] }
             : { mimeType: [] };
           if (question?.file) {
-            template['showEvidence'] = "Yes"
+            template["showEvidence"] = "Yes";
           }
           break;
 
@@ -448,11 +481,15 @@ const getTextTemplate = (question, type) => {
           break;
 
         case "showremarks":
-          template[key] = question[questionTemplate.text[key]] === true ? 'Yes' : 'No';
+          template[key] =
+            question[questionTemplate.text[key]] === true ? "Yes" : "No";
           break;
 
         case "name":
-          template[key] = question[questionTemplate.text[key]]?.length > 0 ? question[questionTemplate.text[key]][0] : "Question"
+          template[key] =
+            question[questionTemplate.text[key]]?.length > 0
+              ? question[questionTemplate.text[key]][0]
+              : "Question";
           break;
 
         default:
@@ -465,11 +502,10 @@ const getTextTemplate = (question, type) => {
   return template;
 };
 
-
 module.exports = {
   getDateTemplate,
   getSliderTemplate,
-  getMSMCQTemplate,
+  getMultipleSelectMCQTemplate,
   getTextTemplate,
   getMCQTemplate,
 };

@@ -5,15 +5,11 @@ const {
   createProgramAndQuestionsets,
 } = require("./template/generate/gQuestionSet.js");
 
-const { getAllCriterias, migrateQuestionset } = require('./template/generate/gQuestionSet.js')
-
 const logger = require("./logger");
 const { CONFIG } = require("./constant/config");
-const { ObjectID } = require("mongodb");
 
 const migrateData = async (req, res) => {
   try {
-
     const programMigration = {
       migrated: 0,
       updated: 0,
@@ -65,7 +61,7 @@ const migrateData = async (req, res) => {
           branching: { count: 0, ids: [] },
           published: { count: 0, ids: [] },
         },
-        question: { count: 0, ids: [] }
+        question: { count: 0, ids: [] },
       },
     };
 
@@ -75,7 +71,6 @@ const migrateData = async (req, res) => {
 
     // connect to db
     const db = await createDBInstance();
-
 
     while (hasMoreDocuments) {
       // get solutions from mongo {survey, observation w/o rubric}
@@ -96,7 +91,6 @@ const migrateData = async (req, res) => {
       console.log(JSON.stringify(migratedCount));
       logger.info(`\n migratedCount ${JSON.stringify(migratedCount)}`);
 
-
       skip += batchSize;
 
       if (data.length < batchSize) {
@@ -106,8 +100,8 @@ const migrateData = async (req, res) => {
 
     process.exit();
   } catch (err) {
-    logger.error(`Error while migrating : ${err}`)
-    console.log(err)
+    logger.error(`Error while migrating : ${err}`);
+    console.log(err);
     throw new Error("Error occurred", err);
   }
 };

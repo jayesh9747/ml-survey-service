@@ -27,7 +27,7 @@ const questionsHelper = require(MODULES_BASE_PATH + "/questions/helper");
 const userProfileService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const programJoinEnabled = process.env.PROGRAM_JOIN_ON_OFF
-const transFormationHelper = require(MODULES_BASE_PATH + "/questions/transformationHelper");
+const transFormationHelper = require(MODULES_BASE_PATH + "/DTO/questionsDTO");
 
 /**
  * SurveysHelper
@@ -842,7 +842,7 @@ module.exports = class SurveysHelper {
     userToken = "",
     appVersion = "",
     appName = "",
-    isTransformationRequired = false,
+    isTransformationRequired = true,
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -897,7 +897,6 @@ module.exports = class SurveysHelper {
         solutionDocument = solutionDocument[0];
 
         let endDateCheckRequired = true;
-        // let endDateCheckRequired = false;
 
         if (submissionId != "") {
           let submissionDocument =
@@ -1017,9 +1016,7 @@ module.exports = class SurveysHelper {
         let evidences = {};
 
         if (isTransformationRequired && referenceQuestionSetId) {
-          solutionDocument._id = referenceQuestionSetId;
-          console.log("here i am fetch the question set hierarchy")
-          evidences = await transFormationHelper.getQuestionSetHierarchy(submissionDocumentCriterias, solutionDocument);
+          evidences = await transFormationHelper.getQuestionSetHierarchy(submissionDocumentCriterias, solutionDocument)?.data;
         }
 
         let criteria = criteriaQuestionDocument[0];

@@ -1,14 +1,14 @@
 const { isEmpty } = require("lodash");
 
 /**
-* Map section data
-* @method
-* @name getCriteriaData
-* @param {Object} criteria - criteria
-* @param {String} type  - observation or survey
-* @param {Object} question - criteria
-* @returns  - returns the mapped section
-**/
+ * Map section data
+ * @method
+ * @name getCriteriaData
+ * @param {Object} criteria - criteria
+ * @param {String} type  - observation or survey
+ * @param {Object} question - criteria
+ * @returns  - returns the mapped section
+ **/
 const getCriteriaData = (criteria, type, question = {}) => {
   if (isEmpty(question)) {
     return {
@@ -30,5 +30,5 @@ const getCriteriaData = (criteria, type, question = {}) => {
 };
 
 module.exports = {
-  getCriteriaData
+  getCriteriaData,
 };

@@ -4,7 +4,10 @@ const { createQuestionSet } = require("../../api-list/question");
 const { CONFIG } = require("../../constant/config");
 const { findAll, updateById } = require("../../db");
 const logger = require("../../logger");
-const { updateHierarchyTemplate, getPrecondition } = require("../helpers/hierarchyHelper");
+const {
+  updateHierarchyTemplate,
+  getPrecondition,
+} = require("../helpers/hierarchyHelper");
 
 const {
   setQuestionSetTemplate,
@@ -14,16 +17,19 @@ const { createProgramTemplate } = require("./gProgram");
 const { getCriteriaData } = require("../migrate/common");
 const { isEmpty, omit, uniq, compact } = require("lodash");
 
-const { writeCSV, updateQuestionMappingInCSV } = require('../helpers/migrationcsv')
+const {
+  writeCSV,
+  updateQuestionMappingInCSV,
+} = require("../helpers/migrationcsv");
 
 /**
-* Loop through all the solutions from mongo and create the program and migrate the solutions under that program 
-* @method
-* @name createProgramAndQuestionsets
-* @param {Object[]} solutions - solutions
-* @param {Object} migratedCount - migratedCount to increment migration count
-* 
-**/
+ * Loop through all the solutions from mongo and create the program and migrate the solutions under that program
+ * @method
+ * @name createProgramAndQuestionsets
+ * @param {Object[]} solutions - solutions
+ * @param {Object} migratedCount - migratedCount to increment migration count
+ *
+ **/
 const createProgramAndQuestionsets = async (solutions, migratedCount) => {
   for (let solution of solutions) {
     let programId = solution?.migrationReference?.sourcingProgramId;
@@ -43,19 +49,19 @@ const createProgramAndQuestionsets = async (solutions, migratedCount) => {
         ${programId}`
     );
     if (programId) {
-      if (!solution?.hasOwnProperty('migrationReference')) {
+      if (!solution?.hasOwnProperty("migrationReference")) {
         // get the updated solution with programId from mongo
         const solData = await findAll(CONFIG.DB.TABLES.solutions, {
-          _id: solution?._id
+          _id: solution?._id,
         });
-        solution = solData[0]
+        solution = solData[0];
       }
       await migrateQuestionset(
         solution,
         programId,
         migratedCount,
         programData?.contributor
-      )
+      );
     }
   }
 };
@@ -204,8 +210,8 @@ const createProgramAndQuestionsets = async (solutions, migratedCount) => {
             "isContributorAccepted": true,
             "isContributorAdded": true,
             "isNominated": true,
-            "isSrcProgramPublished": true,
-            "isSrcProgramUpdated": true,
+            "isSourceProgramPublished": true,
+            "isSourceProgramUpdated": true,
             "sourcingProgramId": "d1b93850-df5e-11ed-87b4-9feca80ba862",
             "isBranchingUpdated": true,
             "isHierarchyUpdated": true,
@@ -244,10 +250,10 @@ const migrateQuestionset = async (
                         ${JSON.stringify(err?.response?.data)}`);
 
         writeCSV({
-          "solutionId": questionSetId,
-          "isFailed": "YES",
-          "reasons": `${JSON.stringify(err?.response?.data)}`
-        })
+          solutionId: questionSetId,
+          isFailed: "YES",
+          reasons: `${JSON.stringify(err?.response?.data)}`,
+        });
 
         if (
           !migratedCount.failed.questionSet.migrated.ids.includes(questionSetId)
@@ -259,11 +265,11 @@ const migrateQuestionset = async (
     );
 
     writeCSV({
-      "solutionId": questionSetId,
-      "isFailed": "NO",
-      "referenceQuestionSetId": questionSetMigratedId,
-      "reasons": ""
-    })
+      solutionId: questionSetId,
+      isFailed: "NO",
+      referenceQuestionSetId: questionSetMigratedId,
+      reasons: "",
+    });
 
     logger.info(
       `migrateQuestionset: questionSetMigratedId: 
@@ -285,9 +291,13 @@ const migrateQuestionset = async (
     });
     migratedCount.success.questionSet.current.migrated++;
   }
-  const criterias = await getAllCriterias(solution, migratedCount, programId, questionSetMigratedId);
+  const criterias = await getAllCriterias(
+    solution,
+    migratedCount,
+    programId,
+    questionSetMigratedId
+  );
 };
-
 
 /**
 * Recursive function to get criterias
@@ -302,10 +312,10 @@ const migrateQuestionset = async (
 ]
 **/
 const getThemeChildrenCriteria = (theme, criterias = []) => {
-  if (theme?.hasOwnProperty('children') && theme?.children?.length > 0) {
+  if (theme?.hasOwnProperty("children") && theme?.children?.length > 0) {
     for (let i = 0; i < theme?.children?.length; i++) {
       const childCriteria = theme?.children[i];
-      if (childCriteria?.hasOwnProperty('criteria')) {
+      if (childCriteria?.hasOwnProperty("criteria")) {
         criterias = [...criterias, ...childCriteria?.criteria];
       } else {
         return getThemeChildrenCriteria(childCriteria, criterias);
@@ -313,34 +323,44 @@ const getThemeChildrenCriteria = (theme, criterias = []) => {
     }
   }
   return criterias;
-}
+};
 
 /**
-* Loop through all the criterias and get all the questions from all the criterias
-* @method
-* @name getAllCriterias
-* @param {Object} solution - solution
-* @param {Object} migratedCount - migratedCount to increment migration count
-* @param {String} programId - programId
-* @param {String} questionSetMigratedId - referencequestionId
-**/
-const getAllCriterias = async (solution, migratedCount, programId, questionSetMigratedId) => {
+ * Loop through all the criterias and get all the questions from all the criterias
+ * @method
+ * @name getAllCriterias
+ * @param {Object} solution - solution
+ * @param {Object} migratedCount - migratedCount to increment migration count
+ * @param {String} programId - programId
+ * @param {String} questionSetMigratedId - referencequestionId
+ **/
+const getAllCriterias = async (
+  solution,
+  migratedCount,
+  programId,
+  questionSetMigratedId
+) => {
   let criteriaIds = [];
-  if (solution?.themes?.length <= 1 && solution?.themes[0]?.hasOwnProperty("criteria")) {
+  if (
+    solution?.themes?.length <= 1 &&
+    solution?.themes[0]?.hasOwnProperty("criteria")
+  ) {
     criteriaIds = solution?.themes[0]?.criteria || [];
   } else {
     for (let j = 0; j < solution?.themes?.length; j++) {
       const theme = solution?.themes[j];
-      if (theme?.hasOwnProperty('children')) {
+      if (theme?.hasOwnProperty("children")) {
         const criterias = getThemeChildrenCriteria(theme, criteriaIds);
         criteriaIds = [...criteriaIds, ...criterias];
-      } else if (theme?.hasOwnProperty('criteria')) {
+      } else if (theme?.hasOwnProperty("criteria")) {
         criteriaIds = [...criteriaIds, ...theme?.criteria];
       }
     }
   }
 
-  criteriaIds = criteriaIds.map((criteria) => ObjectID(criteria?.criteriaId?.toString()));
+  criteriaIds = criteriaIds.map((criteria) =>
+    ObjectID(criteria?.criteriaId?.toString())
+  );
 
   const criterias = await findAll(CONFIG.DB.TABLES.criteria_questions, {
     _id: { $in: criteriaIds },
@@ -371,14 +391,18 @@ const getAllCriterias = async (solution, migratedCount, programId, questionSetMi
     matrixQuestionIds = uniq(matrixQuestionIds);
     nonMatrixQuestionIds = uniq(nonMatrixQuestionIds);
 
-    const matrixAndNonMatrixQues = getMatrixAndNonMatrixQuestions(questions, matrixQuestionIds, nonMatrixQuestionIds);
+    const matrixAndNonMatrixQues = getMatrixAndNonMatrixQuestions(
+      questions,
+      matrixQuestionIds,
+      nonMatrixQuestionIds
+    );
     matrixQuestionIds = [
       ...matrixQuestionIds,
-      ...(matrixAndNonMatrixQues.matrixQuestionIds)
+      ...matrixAndNonMatrixQues.matrixQuestionIds,
     ];
     nonMatrixQuestionIds = [
       ...nonMatrixQuestionIds,
-      ...(matrixAndNonMatrixQues.nonMatrixQuestionIds)
+      ...matrixAndNonMatrixQues.nonMatrixQuestionIds,
     ];
   }
 
@@ -430,23 +454,31 @@ const getAllCriterias = async (solution, migratedCount, programId, questionSetMi
   };
 
   // create the hierarchy to with formed sections for the current solution
-  const hierarchy = await updateHierarchyTemplate(sectionsList, solution, programId, migratedCount).catch(err => {
-    logger.error("Error in updateHierarchyTemplate", err)
+  const hierarchy = await updateHierarchyTemplate(
+    sectionsList,
+    solution,
+    programId,
+    migratedCount
+  ).catch((err) => {
+    logger.error("Error in updateHierarchyTemplate", err);
   });
-
 };
 
 /**
-* Separate the matrix and nonmatrix questions
-* @method
-* @name getMatrixAndNonMatrixQuestions
-* @param {Object[]} questions - questions
-* @param {String[]} matrixQueIds - matrixQueIds (objectId's) in mongo
-* @param {String[]} nonMatrixQueIds - nonMatrixQueIds (objectId's) in mongo
-* @returns {JSON} returns matrix and nonmatrix questionIds in mongo 
-**/
+ * Separate the matrix and nonmatrix questions
+ * @method
+ * @name getMatrixAndNonMatrixQuestions
+ * @param {Object[]} questions - questions
+ * @param {String[]} matrixQueIds - matrixQueIds (objectId's) in mongo
+ * @param {String[]} nonMatrixQueIds - nonMatrixQueIds (objectId's) in mongo
+ * @returns {JSON} returns matrix and nonmatrix questionIds in mongo
+ **/
 
-const getMatrixAndNonMatrixQuestions = (questions, matrixQueIds = [], nonMatrixQueIds = []) => {
+const getMatrixAndNonMatrixQuestions = (
+  questions,
+  matrixQueIds = [],
+  nonMatrixQueIds = []
+) => {
   let matrixQuestionIds = matrixQueIds?.length > 0 ? matrixQueIds : [];
   let nonMatrixQuestionIds = nonMatrixQueIds?.length > 0 ? nonMatrixQueIds : [];
 
@@ -455,14 +487,25 @@ const getMatrixAndNonMatrixQuestions = (questions, matrixQueIds = [], nonMatrixQ
 
     if (question?.responseType === "matrix") {
       matrixQuestionIds.push(id);
-      if (question?.instanceQuestions?.length > 0 && question?.children?.length > 0) {
-        matrixQuestionIds = [...matrixQuestionIds, ...getInstanceQuestionIds(question, 'instance'), ...getInstanceQuestionIds(question, 'children')];
-      }
-      else if (question?.instanceQuestions?.length > 0) {
-        matrixQuestionIds = [...matrixQuestionIds, ...getInstanceQuestionIds(question, 'instance')];
-      }
-      else if (question?.children?.length > 0) {
-        matrixQuestionIds = [...matrixQuestionIds, ...getInstanceQuestionIds(question, 'children')];
+      if (
+        question?.instanceQuestions?.length > 0 &&
+        question?.children?.length > 0
+      ) {
+        matrixQuestionIds = [
+          ...matrixQuestionIds,
+          ...getInstanceQuestionIds(question, "instance"),
+          ...getInstanceQuestionIds(question, "children"),
+        ];
+      } else if (question?.instanceQuestions?.length > 0) {
+        matrixQuestionIds = [
+          ...matrixQuestionIds,
+          ...getInstanceQuestionIds(question, "instance"),
+        ];
+      } else if (question?.children?.length > 0) {
+        matrixQuestionIds = [
+          ...matrixQuestionIds,
+          ...getInstanceQuestionIds(question, "children"),
+        ];
       }
     } else if (!matrixQuestionIds?.includes(id)) {
       nonMatrixQuestionIds.push(id);
@@ -472,21 +515,20 @@ const getMatrixAndNonMatrixQuestions = (questions, matrixQueIds = [], nonMatrixQ
   return { matrixQuestionIds, nonMatrixQuestionIds };
 };
 
-
 /**
-* To create and update the matrix section data
-* @method
-* @name getMatrixSectionData
-* @param {String[]} matrixQuestionIds - matrixQueIds (objectId's) in mongo
-* @param {Object[]} allQuestionsFromAllSections - allQuestionsFromAllSections
-* @param {String} solutionType - Observation or solution
-* @param {String} solutionId - ObjectId
-* @param {String} referenceQuestionsetId - ObjectId
-* @param {Object[]} sections - newly mapped sections to update the hierarchy
-* @param {Object[]} existingCriteriaQuestions - current criteria questions
-* @param {Object} migratedCount - migratedCount to increment migration count
-* @returns {JSON} returns the updated matrix sections and incremented the migratedcount object
-**/
+ * To create and update the matrix section data
+ * @method
+ * @name getMatrixSectionData
+ * @param {String[]} matrixQuestionIds - matrixQueIds (objectId's) in mongo
+ * @param {Object[]} allQuestionsFromAllSections - allQuestionsFromAllSections
+ * @param {String} solutionType - Observation or solution
+ * @param {String} solutionId - ObjectId
+ * @param {String} referenceQuestionsetId - ObjectId
+ * @param {Object[]} sections - newly mapped sections to update the hierarchy
+ * @param {Object[]} existingCriteriaQuestions - current criteria questions
+ * @param {Object} migratedCount - migratedCount to increment migration count
+ * @returns {JSON} returns the updated matrix sections and incremented the migratedcount object
+ **/
 
 const getMatrixSectionData = async (
   matrixQuestionIds,
@@ -494,7 +536,7 @@ const getMatrixSectionData = async (
   solutionType,
   solutionId, // solution-id
   referenceQuestionsetId, // migrated-solution-id
-  sections, //section list 
+  sections, //section list
   existingCriteriaQuestions,
   migratedCount
 ) => {
@@ -514,14 +556,27 @@ const getMatrixSectionData = async (
           let instanceQuestionsIds = [];
 
           // update the instanceQuestionIds if a question has both instancequestions and children
-          if (question?.instanceQuestions?.length > 0 && question?.children?.length > 0) {
-            instanceQuestionsIds = [...instanceQuestionsIds, ...getInstanceQuestionIds(question, 'instance'), ...getInstanceQuestionIds(question, 'children')];
+          if (
+            question?.instanceQuestions?.length > 0 &&
+            question?.children?.length > 0
+          ) {
+            instanceQuestionsIds = [
+              ...instanceQuestionsIds,
+              ...getInstanceQuestionIds(question, "instance"),
+              ...getInstanceQuestionIds(question, "children"),
+            ];
           } // update the instanceQuestionIds if a question has only instancequestions
           else if (question?.instanceQuestions?.length > 0) {
-            instanceQuestionsIds = [...instanceQuestionsIds, ...getInstanceQuestionIds(question, 'instance')];
+            instanceQuestionsIds = [
+              ...instanceQuestionsIds,
+              ...getInstanceQuestionIds(question, "instance"),
+            ];
           } // update the instanceQuestionIds if a question has only children
           else if (question?.children?.length > 0) {
-            instanceQuestionsIds = [...instanceQuestionsIds, ...getInstanceQuestionIds(question, 'children')];
+            instanceQuestionsIds = [
+              ...instanceQuestionsIds,
+              ...getInstanceQuestionIds(question, "children"),
+            ];
           }
 
           const objValues = Object.values(sections);
@@ -529,7 +584,10 @@ const getMatrixSectionData = async (
 
           // To check duplicate section titles
           let isSectionTitlePresent = objValues.map((obj) => {
-            name = question?.question?.length > 0 ? question?.question[0] : "Matrix Section";
+            name =
+              question?.question?.length > 0
+                ? question?.question[0]
+                : "Matrix Section";
             if (obj?.sectionData?.name === name) {
               return obj;
             }
@@ -539,8 +597,8 @@ const getMatrixSectionData = async (
           if (isSectionTitlePresent?.length > 0) {
             question = {
               ...question,
-              question: [`${name} ${isSectionTitlePresent?.length + 1}`]
-            }
+              question: [`${name} ${isSectionTitlePresent?.length + 1}`],
+            };
           }
           // To create the section
           sections[qid] = {
@@ -557,63 +615,68 @@ const getMatrixSectionData = async (
             branchingLogic: {},
             allowMultipleInstances: "Yes",
             instances: { label: question?.instanceIdentifier },
-            nodesModified: {}
-          }
+            nodesModified: {},
+          };
         }
       } else {
         // Get the question section
-        const questionCriteria = getMatrixQueCriteriaIdAndData(
-          qid,
-          sections
-        );
+        const questionCriteria = getMatrixQueCriteriaIdAndData(qid, sections);
         // Get the migrated question
         let migratedQuestion = await createQuestionTemplate(
           question,
           migratedCount
         ).catch((err) => {
           updateQuestionMappingInCSV({
-            "solutionId": solutionId,
-            "criteriaId": '',
-            "questionsetId": referenceQuestionsetId,
+            solutionId: solutionId,
+            criteriaId: "",
+            questionsetId: referenceQuestionsetId,
             questions: {
               [qid]: {
-                id: '',
-                status: '',
-                isFailed: 'YES',
-                reasons: `${JSON.stringify(err?.response?.data)}`
-              }
-            }
-          })
+                id: "",
+                status: "",
+                isFailed: "YES",
+                reasons: `${JSON.stringify(err?.response?.data)}`,
+              },
+            },
+          });
         });
 
         updateQuestionMappingInCSV({
-          "solutionId": solutionId,
-          "criteriaId": '',
-          "questionsetId": referenceQuestionsetId,
+          solutionId: solutionId,
+          criteriaId: "",
+          questionsetId: referenceQuestionsetId,
           questions: {
             [qid]: {
               id: migratedQuestion.referenceQuestionId,
-              status: 'draft',
-              isFailed: 'No',
-              reasons: ''
-            }
-          }
-        })
+              status: "draft",
+              isFailed: "No",
+              reasons: "",
+            },
+          },
+        });
 
         // here add the csv file
 
-        sections[questionCriteria?.sectionId].children = [...sections[questionCriteria?.sectionId].children, migratedQuestion?.referenceQuestionId];
-        sections[questionCriteria?.sectionId].questionIds = [...sections[questionCriteria?.sectionId].questionIds, qid];
-        sections[questionCriteria?.sectionId].nodesModified[migratedQuestion?.referenceQuestionId] = {
+        sections[questionCriteria?.sectionId].children = [
+          ...sections[questionCriteria?.sectionId].children,
+          migratedQuestion?.referenceQuestionId,
+        ];
+        sections[questionCriteria?.sectionId].questionIds = [
+          ...sections[questionCriteria?.sectionId].questionIds,
+          qid,
+        ];
+        sections[questionCriteria?.sectionId].nodesModified[
+          migratedQuestion?.referenceQuestionId
+        ] = {
           isNew: false,
           metadata: {
-            ...omit(migratedQuestion, 'referenceQuestionId'),
-            visibility: "Parent"
+            ...omit(migratedQuestion, "referenceQuestionId"),
+            visibility: "Parent",
           },
           objectType: "Question",
           root: false,
-        }
-        migratedQuestion = omit(migratedQuestion, 'referenceQuestionId');
+        };
+        migratedQuestion = omit(migratedQuestion, "referenceQuestionId");
       }
     }
   }
@@ -621,32 +684,42 @@ const getMatrixSectionData = async (
 };
 
 /**
-* To create and update the nonmatrix  section data
-* @method
-* @name getNonMatrixSectionData
-* @param {String[]} nonMatrixQuestionIds - nonMatrixQuestionIds (objectId's) in mongo
-* @param {Object[]} allQuestionsFromAllSections - allQuestionsFromAllSections
-* @param {String} solutionType - Observation or solution
-* @param {Object[]} sections - newly mapped sections to update the hierarchy
-* @param {Object[]} existingCriteriaQuestions - current criteria questions
-* @param {Object} migratedCount - migratedCount to increment migration count
-* @returns {JSON} returns the updated nonmatrix sections and incremented the migratedcount object
-**/
+ * To create and update the nonmatrix  section data
+ * @method
+ * @name getNonMatrixSectionData
+ * @param {String[]} nonMatrixQuestionIds - nonMatrixQuestionIds (objectId's) in mongo
+ * @param {Object[]} allQuestionsFromAllSections - allQuestionsFromAllSections
+ * @param {String} solutionType - Observation or solution
+ * @param {Object[]} sections - newly mapped sections to update the hierarchy
+ * @param {Object[]} existingCriteriaQuestions - current criteria questions
+ * @param {Object} migratedCount - migratedCount to increment migration count
+ * @returns {JSON} returns the updated nonmatrix sections and incremented the migratedcount object
+ **/
 const getNonMatrixSectionData = async (
   nonMatrixQuestionIds,
   allQuestionsFromAllSections,
   solutionType,
   solutionId, // solution-id
-  referenceQuestionsetId, // migrated-solution-id  
+  referenceQuestionsetId, // migrated-solution-id
   sections,
   existingCriteriaQuestions,
-  migratedCount) => {
+  migratedCount
+) => {
   for (let i = 0; i < nonMatrixQuestionIds.length; i++) {
     const qid = nonMatrixQuestionIds[i];
-    const question = allQuestionsFromAllSections.find((que) => que?._id?.toString() === qid)
+    const question = allQuestionsFromAllSections.find(
+      (que) => que?._id?.toString() === qid
+    );
     let sectionData = {};
-    if (!isEmpty(question) && !isEmpty(getQueCriteriaIdAndData(qid, existingCriteriaQuestions)) && isEmpty(getQueCriteriaIdAndData(qid, sections))) {
-      const questionCriteria = getQueCriteriaIdAndData(qid, existingCriteriaQuestions);
+    if (
+      !isEmpty(question) &&
+      !isEmpty(getQueCriteriaIdAndData(qid, existingCriteriaQuestions)) &&
+      isEmpty(getQueCriteriaIdAndData(qid, sections))
+    ) {
+      const questionCriteria = getQueCriteriaIdAndData(
+        qid,
+        existingCriteriaQuestions
+      );
       const sectionId = questionCriteria?.sectionId;
 
       if (isParentQuestion(question)) {
@@ -659,15 +732,23 @@ const getNonMatrixSectionData = async (
             sectionData = sections[pageName];
           } else {
             // else create and assign the section data to sections[pageName]
-            sections[pageName] = getPageSection(questionCriteria, pageName, solutionType);
-            sectionData = sections[pageName]
+            sections[pageName] = getPageSection(
+              questionCriteria,
+              pageName,
+              solutionType
+            );
+            sectionData = sections[pageName];
           }
         } else {
           if (sections?.hasOwnProperty(sectionId)) {
             sectionData = sections[sectionId];
           } else {
             // else create and assign the section data to sections[sectionId]
-            sections[sectionId] = getNonPageSection(questionCriteria, sectionId, solutionType);
+            sections[sectionId] = getNonPageSection(
+              questionCriteria,
+              sectionId,
+              solutionType
+            );
             sectionData = sections[sectionId];
           }
         }
@@ -677,70 +758,83 @@ const getNonMatrixSectionData = async (
             migratedCount
           ).catch((error) => {
             updateQuestionMappingInCSV({
-              "solutionId": solutionId,
-              "questionsetId": referenceQuestionsetId,
+              solutionId: solutionId,
+              questionsetId: referenceQuestionsetId,
               questions: {
                 [qid]: {
-                  id: '',
-                  status: '',
-                  isFailed: 'YES',
-                  reasons: `${JSON.stringify(error?.response?.data)}`
-                }
-              }
-            })
+                  id: "",
+                  status: "",
+                  isFailed: "YES",
+                  reasons: `${JSON.stringify(error?.response?.data)}`,
+                },
+              },
+            });
           });
 
           updateQuestionMappingInCSV({
-            "solutionId": solutionId,
-            "criteriaId": '',
-            "questionsetId": referenceQuestionsetId,
+            solutionId: solutionId,
+            criteriaId: "",
+            questionsetId: referenceQuestionsetId,
             questions: {
               [qid]: {
                 id: migratedQuestion.referenceQuestionId,
-                status: 'draft',
-                isFailed: 'No',
-                reasons: ''
-              }
-            }
-          })
+                status: "draft",
+                isFailed: "No",
+                reasons: "",
+              },
+            },
+          });
 
-          sectionData.children = [...sectionData.children, migratedQuestion?.referenceQuestionId];
+          sectionData.children = [
+            ...sectionData.children,
+            migratedQuestion?.referenceQuestionId,
+          ];
           sectionData.questionIds = [...sectionData.questionIds, qid];
 
           // Create the branchingLogic structure for the parent question
-          if (!sectionData?.branchingLogic?.hasOwnProperty(migratedQuestion?.referenceQuestionId)) {
-            sectionData.branchingLogic[migratedQuestion?.referenceQuestionId] = {
-              target: [],
-              preCondition: {},
-              source: [],
-            }
+          if (
+            !sectionData?.branchingLogic?.hasOwnProperty(
+              migratedQuestion?.referenceQuestionId
+            )
+          ) {
+            sectionData.branchingLogic[migratedQuestion?.referenceQuestionId] =
+              {
+                target: [],
+                preCondition: {},
+                source: [],
+              };
           }
           // Add the question data to nodesModified changing the visibility to parent
           sectionData.nodesModified[migratedQuestion?.referenceQuestionId] = {
             isNew: false,
             metadata: {
-              ...omit(migratedQuestion, 'referenceQuestionId'),
-              visibility: "Parent"
+              ...omit(migratedQuestion, "referenceQuestionId"),
+              visibility: "Parent",
             },
             objectType: "Question",
             root: false,
-          }
-          migratedQuestion = omit(migratedQuestion, 'referenceQuestionId');
+          };
+          migratedQuestion = omit(migratedQuestion, "referenceQuestionId");
           sections[sectionData?.sectionId] = {
             ...sections[sectionData?.sectionId],
-            ...sectionData
-          }
+            ...sectionData,
+          };
         }
       } else if (isChildQuestion(question)) {
         const parentId = question?.visibleIf[0]?._id?.toString();
         // get the parentSection and to add the child to parent section
-        const parentQuestionCriteria = getQueCriteriaIdAndData(parentId, existingCriteriaQuestions);
-        let parentQuestion = allQuestionsFromAllSections.find((que) => que?._id?.toString() === parentId);
-        // dead if condition 
+        const parentQuestionCriteria = getQueCriteriaIdAndData(
+          parentId,
+          existingCriteriaQuestions
+        );
+        let parentQuestion = allQuestionsFromAllSections.find(
+          (que) => que?._id?.toString() === parentId
+        );
+        // dead if condition
         if (parentQuestion?.children?.length <= 0) {
           const data = await findAll(CONFIG.DB.TABLES.questions, {
             _id: parentQuestion?._id,
-          }).catch((err) => { });
+          }).catch((err) => {});
           parentQuestion = data[0];
         }
         const parentSectionId = parentQuestionCriteria?.sectionId;
@@ -751,15 +845,22 @@ const getNonMatrixSectionData = async (
             if (sections?.hasOwnProperty(pageName)) {
               sectionData = sections[pageName];
             } else {
-              sections[pageName] = getPageSection(parentQuestionCriteria, pageName, solutionType);
-              sectionData = sections[pageName]
+              sections[pageName] = getPageSection(
+                parentQuestionCriteria,
+                pageName,
+                solutionType
+              );
+              sectionData = sections[pageName];
             }
-          }
-          else {
+          } else {
             if (sections?.hasOwnProperty(parentSectionId)) {
               sectionData = sections[parentSectionId];
             } else {
-              sections[parentSectionId] = getNonPageSection(parentQuestionCriteria, parentSectionId, solutionType);
+              sections[parentSectionId] = getNonPageSection(
+                parentQuestionCriteria,
+                parentSectionId,
+                solutionType
+              );
               sectionData = sections[parentSectionId];
             }
           }
@@ -769,102 +870,119 @@ const getNonMatrixSectionData = async (
               migratedCount
             ).catch((err) => {
               updateQuestionMappingInCSV({
-                "solutionId": solutionId,
-                "criteriaId": '',
-                "questionsetId": referenceQuestionsetId,
+                solutionId: solutionId,
+                criteriaId: "",
+                questionsetId: referenceQuestionsetId,
                 questions: {
                   [qid]: {
-                    id: '',
-                    status: '',
-                    isFailed: 'No',
-                    reasons: `${JSON.stringify(err?.response?.data)}`
-                  }
-                }
-              })
+                    id: "",
+                    status: "",
+                    isFailed: "No",
+                    reasons: `${JSON.stringify(err?.response?.data)}`,
+                  },
+                },
+              });
             });
 
             updateQuestionMappingInCSV({
-              "solutionId": solutionId,
-              "criteriaId": '',
-              "questionsetId": referenceQuestionsetId,
+              solutionId: solutionId,
+              criteriaId: "",
+              questionsetId: referenceQuestionsetId,
               questions: {
                 [qid]: {
                   id: migratedQuestion.referenceQuestionId,
-                  status: 'draft',
-                  isFailed: 'No',
-                  reasons: ''
-                }
-              }
-            })
+                  status: "draft",
+                  isFailed: "No",
+                  reasons: "",
+                },
+              },
+            });
 
             let parentMigratedQuestion = await createQuestionTemplate(
               parentQuestion,
               migratedCount
             ).catch((err) => {
               updateQuestionMappingInCSV({
-                "solutionId": solutionId,
-                "criteriaId": '',
-                "questionsetId": referenceQuestionsetId,
+                solutionId: solutionId,
+                criteriaId: "",
+                questionsetId: referenceQuestionsetId,
                 questions: {
                   [parentQuestion._id]: {
-                    id: '',
-                    status: '',
-                    isFailed: 'YES',
-                    reasons: `${JSON.stringify(err?.response?.data)}`
-                  }
-                }
-              })
+                    id: "",
+                    status: "",
+                    isFailed: "YES",
+                    reasons: `${JSON.stringify(err?.response?.data)}`,
+                  },
+                },
+              });
             });
 
             updateQuestionMappingInCSV({
-              "solutionId": solutionId,
-              "criteriaId": '',
-              "questionsetId": referenceQuestionsetId,
+              solutionId: solutionId,
+              criteriaId: "",
+              questionsetId: referenceQuestionsetId,
               questions: {
                 [parentQuestion._id]: {
                   id: parentMigratedQuestion.referenceQuestionId,
-                  status: 'draft',
-                  isFailed: 'No',
-                  reasons: ''
-                }
-              }
-            })
+                  status: "draft",
+                  isFailed: "No",
+                  reasons: "",
+                },
+              },
+            });
 
-
-            const parentReferenceQuestionId = parentMigratedQuestion?.referenceQuestionId;
-            sectionData.children = [...sectionData.children, migratedQuestion?.referenceQuestionId];
+            const parentReferenceQuestionId =
+              parentMigratedQuestion?.referenceQuestionId;
+            sectionData.children = [
+              ...sectionData.children,
+              migratedQuestion?.referenceQuestionId,
+            ];
             sectionData.questionIds = [...sectionData.questionIds, qid];
-            if (sectionData?.branchingLogic?.hasOwnProperty(parentReferenceQuestionId)) {
-              sectionData.branchingLogic[parentReferenceQuestionId].target.push(migratedQuestion?.referenceQuestionId);
-              sectionData.branchingLogic[parentReferenceQuestionId].target = uniq(sectionData.branchingLogic[parentReferenceQuestionId].target);
+            if (
+              sectionData?.branchingLogic?.hasOwnProperty(
+                parentReferenceQuestionId
+              )
+            ) {
+              sectionData.branchingLogic[parentReferenceQuestionId].target.push(
+                migratedQuestion?.referenceQuestionId
+              );
+              sectionData.branchingLogic[parentReferenceQuestionId].target =
+                uniq(
+                  sectionData.branchingLogic[parentReferenceQuestionId].target
+                );
             } else {
               sectionData.branchingLogic[parentReferenceQuestionId] = {
                 target: [migratedQuestion?.referenceQuestionId],
                 preCondition: {},
                 source: [],
-              }
+              };
             }
             const visible = question?.visibleIf ? question?.visibleIf[0] : {};
             // Update the branching logic with the question predefined conditions
-            sectionData.branchingLogic[migratedQuestion?.referenceQuestionId] = {
-              target: [],
-              preCondition: getPrecondition(visible, parentReferenceQuestionId, parentQuestion),
-              source: [parentReferenceQuestionId],
-            }
+            sectionData.branchingLogic[migratedQuestion?.referenceQuestionId] =
+              {
+                target: [],
+                preCondition: getPrecondition(
+                  visible,
+                  parentReferenceQuestionId,
+                  parentQuestion
+                ),
+                source: [parentReferenceQuestionId],
+              };
             sectionData.nodesModified[migratedQuestion?.referenceQuestionId] = {
               isNew: false,
               metadata: {
-                ...omit(migratedQuestion, 'referenceQuestionId'),
-                visibility: "Parent"
+                ...omit(migratedQuestion, "referenceQuestionId"),
+                visibility: "Parent",
               },
               objectType: "Question",
               root: false,
-            }
-            migratedQuestion = omit(migratedQuestion, 'referenceQuestionId');
+            };
+            migratedQuestion = omit(migratedQuestion, "referenceQuestionId");
             sections[sectionData?.sectionId] = {
               ...sections[sectionData?.sectionId],
-              ...sectionData
-            }
+              ...sectionData,
+            };
           }
         }
       } else {
@@ -873,15 +991,22 @@ const getNonMatrixSectionData = async (
           if (sections?.hasOwnProperty(pageName)) {
             sectionData = sections[pageName];
           } else {
-            sections[pageName] = getPageSection(questionCriteria, pageName, solutionType);
-            sectionData = sections[pageName]
+            sections[pageName] = getPageSection(
+              questionCriteria,
+              pageName,
+              solutionType
+            );
+            sectionData = sections[pageName];
           }
-        }
-        else {
+        } else {
           if (sections?.hasOwnProperty(sectionId)) {
             sectionData = sections[sectionId];
           } else {
-            sections[sectionId] = getNonPageSection(questionCriteria, sectionId, solutionType);
+            sections[sectionId] = getNonPageSection(
+              questionCriteria,
+              sectionId,
+              solutionType
+            );
             sectionData = sections[sectionId];
           }
         }
@@ -892,67 +1017,69 @@ const getNonMatrixSectionData = async (
             migratedCount
           ).catch((err) => {
             updateQuestionMappingInCSV({
-              "solutionId": solutionId,
-              "criteriaId": '',
-              "questionsetId": referenceQuestionsetId,
+              solutionId: solutionId,
+              criteriaId: "",
+              questionsetId: referenceQuestionsetId,
               questions: {
                 [qid]: {
-                  id: '',
-                  status: '',
-                  isFailed: 'YES',
-                  reasons: `${JSON.stringify(err?.response?.data)}`
-                }
-              }
-            })
+                  id: "",
+                  status: "",
+                  isFailed: "YES",
+                  reasons: `${JSON.stringify(err?.response?.data)}`,
+                },
+              },
+            });
           });
 
           updateQuestionMappingInCSV({
-            "solutionId": solutionId,
-            "criteriaId": '',
-            "questionsetId": referenceQuestionsetId,
+            solutionId: solutionId,
+            criteriaId: "",
+            questionsetId: referenceQuestionsetId,
             questions: {
               [qid]: {
                 id: migratedQuestion.referenceQuestionId,
-                status: 'draft',
-                isFailed: 'No',
-                reasons: ''
-              }
-            }
-          })
+                status: "draft",
+                isFailed: "No",
+                reasons: "",
+              },
+            },
+          });
 
-          sectionData.children = [...sectionData.children, migratedQuestion?.referenceQuestionId];
+          sectionData.children = [
+            ...sectionData.children,
+            migratedQuestion?.referenceQuestionId,
+          ];
           sectionData.questionIds = [...sectionData.questionIds, qid];
           sectionData.nodesModified[migratedQuestion?.referenceQuestionId] = {
             isNew: false,
             metadata: {
-              ...omit(migratedQuestion, 'referenceQuestionId'),
-              visibility: "Parent"
+              ...omit(migratedQuestion, "referenceQuestionId"),
+              visibility: "Parent",
             },
             objectType: "Question",
             root: false,
-          }
-          migratedQuestion = omit(migratedQuestion, 'referenceQuestionId');
+          };
+          migratedQuestion = omit(migratedQuestion, "referenceQuestionId");
           sections[sectionData?.sectionId] = {
             ...sections[sectionData?.sectionId],
-            ...sectionData
-          }
+            ...sectionData,
+          };
         }
       }
     }
   }
 
   return { sections, migratedCount };
-
-}
+};
 
 /**
-* To check exactly in which section the question present for nonmatrix
-* @method
-* @name getQueCriteriaIdAndData
-* @param {String} qid - nonMatrixQuestionIds (objectId's) in mongo
-* @param {Object[]} sections - newly mapped sections to update the hierarchy
-* @returns {JSON} returns the question section
-**/
+ * To check exactly in which section the question present for nonmatrix
+ * @method
+ * @name getQueCriteriaIdAndData
+ * @param {String} qid - nonMatrixQuestionIds (objectId's) in mongo
+ * @param {Object[]} sections - newly mapped sections to update the hierarchy
+ * @returns {JSON} returns the question section
+ **/
 const getQueCriteriaIdAndData = (qid, sections) => {
   const sectionIds = Object.keys(sections);
   let criteriaData = {};
@@ -965,18 +1092,21 @@ const getQueCriteriaIdAndData = (qid, sections) => {
 };
 
 /**
-* To check exactly in which section the question present for matrix
-* @method
-* @name getMatrixQueCriteriaIdAndData
-* @param {String} qid - MatrixQuestionIds (objectId's) in mongo
-* @param {Object[]} sections - newly mapped sections to update the hierarchy
-* @returns {JSON} returns the question section
-**/
+ * To check exactly in which section the question present for matrix
+ * @method
+ * @name getMatrixQueCriteriaIdAndData
+ * @param {String} qid - MatrixQuestionIds (objectId's) in mongo
+ * @param {Object[]} sections - newly mapped sections to update the hierarchy
+ * @returns {JSON} returns the question section
+ **/
 const getMatrixQueCriteriaIdAndData = (qid, sections) => {
   const sectionIds = Object.keys(sections);
   let criteriaData = {};
   sectionIds.map((sectionId) => {
-    if (sections[sectionId]?.type === 'matrix' && sections[sectionId]?.instanceQuestions.includes(qid)) {
+    if (
+      sections[sectionId]?.type === "matrix" &&
+      sections[sectionId]?.instanceQuestions.includes(qid)
+    ) {
       criteriaData = sections[sectionId];
     }
   });
@@ -984,20 +1114,20 @@ const getMatrixQueCriteriaIdAndData = (qid, sections) => {
 };
 
 /**
-* Get the instanceQuestions and children questions if it's a matrix question
-* @method
-* @name getInstanceQuestionIds
-* @param {Object} question - question
-* @param {String} type - type 
-* @returns {JSON} returns all the instance and children questionIds belongs to matrix question
-**/
+ * Get the instanceQuestions and children questions if it's a matrix question
+ * @method
+ * @name getInstanceQuestionIds
+ * @param {Object} question - question
+ * @param {String} type - type
+ * @returns {JSON} returns all the instance and children questionIds belongs to matrix question
+ **/
 const getInstanceQuestionIds = (question, type = "") => {
   let instanceQuestionsIds = [];
-  if (type === 'instance') {
+  if (type === "instance") {
     instanceQuestionsIds = question?.instanceQuestions.map((que) =>
       que?._id?.toString()
     );
-  } else if (type === 'children') {
+  } else if (type === "children") {
     instanceQuestionsIds = question?.children.map((que) =>
       que?._id?.toString()
     );
@@ -1006,47 +1136,47 @@ const getInstanceQuestionIds = (question, type = "") => {
 };
 
 /**
-* To check if the question  is a child question
-* @method
-* @name isChildQuestion
-* @param {Object} question - question
-* @returns {Boolean} - return true if the question is a child
-**/
+ * To check if the question  is a child question
+ * @method
+ * @name isChildQuestion
+ * @param {Object} question - question
+ * @returns {Boolean} - return true if the question is a child
+ **/
 const isChildQuestion = (question) => {
-  return !isEmpty(question?.visibleIf)
+  return !isEmpty(question?.visibleIf);
 };
 
 /**
-* To check if the question is a parent question
-* @method
-* @name isParentQuestion
-* @param {Object} question - question
-* @returns {Boolean} - return true if the question is a parent
-**/
+ * To check if the question is a parent question
+ * @method
+ * @name isParentQuestion
+ * @param {Object} question - question
+ * @returns {Boolean} - return true if the question is a parent
+ **/
 const isParentQuestion = (question) => {
-  return question?.children?.length > 0
+  return question?.children?.length > 0;
 };
 
 /**
-* To check if the question belongs to any page
-* @method
-* @name isPageQuestion
-* @param {Object} question - question
-* @returns {Boolean} - return true if the question belongs to any page
-**/
+ * To check if the question belongs to any page
+ * @method
+ * @name isPageQuestion
+ * @param {Object} question - question
+ * @returns {Boolean} - return true if the question belongs to any page
+ **/
 const isPageQuestion = (question) => {
-  return !isEmpty(question?.page)
-}
+  return !isEmpty(question?.page);
+};
 
 /**
-* To Create a section named with page number: Ex: Page 1 
-* @method
-* @name getPageSection
-* @param {Object} questionCriteria - {"sectionId":"5f350ab519377eecddb06936","questionIds":["5f350abaaf0a4decfa9a1055","5f350abaaf0a4decfa9a1056","5f350abaaf0a4decfa9a1057","5f350abaaf0a4decfa9a1058"],"sectionData":{"_id":"5f350ab519377eecddb06936","__v":0,"concepts":[{"identifier":"LPD20100","name":"Teacher_Performance","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null},{"identifier":"LPD20400","name":"Instructional_Programme","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null},{"identifier":"LPD20200","name":"Teacher_Empowerment","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null}],"createdAt":"2020-08-13T09:41:14.126Z","createdFor":["0125747659358699520","0125748495625912324"],"criteriaType":"manual","description":"General Information","externalId":"PS001_1597311656239","flag":"","frameworkCriteriaId":"5f350ab26ba5e3ecd7a42210","keywords":["Keyword 1","Keyword 2"],"language":["English"],"name":"General Information","owner":"2b655fd1-201d-4d2a-a1b7-9048a25c0afa","remarks":"","resourceType":["Program","Framework","Criteria"],"rubric":{"name":"General Information","description":"General Information","type":"auto","levels":{"L1":{"level":"L1","label":"Level 1","description":"NA","expression":""}}},"score":"","showRemarks":null,"timesUsed":12,"updatedAt":"2020-08-13T09:41:14.167Z","weightage":20}}
-* @param {String} pageName - section Id 
-* @param {String} solutionType - observation or solution
-* @returns {JSON} - returns mapped section data
-**/
+ * To Create a section named with page number: Ex: Page 1
+ * @method
+ * @name getPageSection
+ * @param {Object} questionCriteria - {"sectionId":"5f350ab519377eecddb06936","questionIds":["5f350abaaf0a4decfa9a1055","5f350abaaf0a4decfa9a1056","5f350abaaf0a4decfa9a1057","5f350abaaf0a4decfa9a1058"],"sectionData":{"_id":"5f350ab519377eecddb06936","__v":0,"concepts":[{"identifier":"LPD20100","name":"Teacher_Performance","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null},{"identifier":"LPD20400","name":"Instructional_Programme","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null},{"identifier":"LPD20200","name":"Teacher_Empowerment","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null}],"createdAt":"2020-08-13T09:41:14.126Z","createdFor":["0125747659358699520","0125748495625912324"],"criteriaType":"manual","description":"General Information","externalId":"PS001_1597311656239","flag":"","frameworkCriteriaId":"5f350ab26ba5e3ecd7a42210","keywords":["Keyword 1","Keyword 2"],"language":["English"],"name":"General Information","owner":"2b655fd1-201d-4d2a-a1b7-9048a25c0afa","remarks":"","resourceType":["Program","Framework","Criteria"],"rubric":{"name":"General Information","description":"General Information","type":"auto","levels":{"L1":{"level":"L1","label":"Level 1","description":"NA","expression":""}}},"score":"","showRemarks":null,"timesUsed":12,"updatedAt":"2020-08-13T09:41:14.167Z","weightage":20}}
+ * @param {String} pageName - section Id
+ * @param {String} solutionType - observation or solution
+ * @returns {JSON} - returns mapped section data
+ **/
 const getPageSection = (questionCriteria, pageName, solutionType) => {
   return {
     sectionId: pageName,
@@ -1060,39 +1190,35 @@ const getPageSection = (questionCriteria, pageName, solutionType) => {
     branchingLogic: {},
     allowMultipleInstances: "",
     instances: {},
-    nodesModified: {}
-  }
-}
+    nodesModified: {},
+  };
+};
 
 /**
-* To Create a section named with page number: Ex: Page 1 
-* @method
-* @name getNonPageSection
-* @param {Object} questionCriteria - {"sectionId":"5f350ab519377eecddb06938","questionIds":["5f350abaaf0a4decfa9a1061","5f350abaaf0a4decfa9a1065","5f350abaaf0a4decfa9a1066","5f350abaaf0a4decfa9a1067","5f350abaaf0a4decfa9a1068","5f350abaaf0a4decfa9a1069","5f350abaaf0a4decfa9a106a","5f350abaaf0a4decfa9a106b","5f350abaaf0a4decfa9a106c","5f350abaaf0a4decfa9a106d"],"sectionData":{"_id":"5f350ab519377eecddb06938","__v":0,"concepts":[{"identifier":"LPD20100","name":"Teacher_Performance","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null},{"identifier":"LPD20400","name":"Instructional_Programme","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null},{"identifier":"LPD20200","name":"Teacher_Empowerment","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null}],"createdAt":"2020-08-13T09:41:14.297Z","createdFor":["0125747659358699520","0125748495625912324"],"criteriaType":"manual","description":"Support Needed","externalId":"PS003_1597311656239","flag":"","frameworkCriteriaId":"5f350ab26ba5e3ecd7a42212","keywords":["Keyword 1","Keyword 2"],"language":["English"],"name":"Support Needed","owner":"2b655fd1-201d-4d2a-a1b7-9048a25c0afa","remarks":"","resourceType":["Program","Framework","Criteria"],"rubric":{"name":"Support Needed","description":"Support Needed","type":"auto","levels":{"L1":{"level":"L1","label":"Level 1","description":"NA","expression":""}}},"score":"","showRemarks":null,"timesUsed":12,"updatedAt":"2020-08-13T09:41:14.436Z","weightage":20}}
-* @param {String} sectionId - section Id
-* @param {String} solutionType - observation or solution
-* @returns {JSON} - returns mapped section data
-**/
+ * To Create a section named with page number: Ex: Page 1
+ * @method
+ * @name getNonPageSection
+ * @param {Object} questionCriteria - {"sectionId":"5f350ab519377eecddb06938","questionIds":["5f350abaaf0a4decfa9a1061","5f350abaaf0a4decfa9a1065","5f350abaaf0a4decfa9a1066","5f350abaaf0a4decfa9a1067","5f350abaaf0a4decfa9a1068","5f350abaaf0a4decfa9a1069","5f350abaaf0a4decfa9a106a","5f350abaaf0a4decfa9a106b","5f350abaaf0a4decfa9a106c","5f350abaaf0a4decfa9a106d"],"sectionData":{"_id":"5f350ab519377eecddb06938","__v":0,"concepts":[{"identifier":"LPD20100","name":"Teacher_Performance","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null},{"identifier":"LPD20400","name":"Instructional_Programme","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null},{"identifier":"LPD20200","name":"Teacher_Empowerment","objectType":"Concept","relation":"associatedTo","description":null,"index":null,"status":null,"depth":null,"mimeType":null,"visibility":null,"compatibilityLevel":null}],"createdAt":"2020-08-13T09:41:14.297Z","createdFor":["0125747659358699520","0125748495625912324"],"criteriaType":"manual","description":"Support Needed","externalId":"PS003_1597311656239","flag":"","frameworkCriteriaId":"5f350ab26ba5e3ecd7a42212","keywords":["Keyword 1","Keyword 2"],"language":["English"],"name":"Support Needed","owner":"2b655fd1-201d-4d2a-a1b7-9048a25c0afa","remarks":"","resourceType":["Program","Framework","Criteria"],"rubric":{"name":"Support Needed","description":"Support Needed","type":"auto","levels":{"L1":{"level":"L1","label":"Level 1","description":"NA","expression":""}}},"score":"","showRemarks":null,"timesUsed":12,"updatedAt":"2020-08-13T09:41:14.436Z","weightage":20}}
+ * @param {String} sectionId - section Id
+ * @param {String} solutionType - observation or solution
+ * @returns {JSON} - returns mapped section data
+ **/
 const getNonPageSection = (questionCriteria, sectionId, solutionType) => {
   return {
     sectionId: sectionId,
     questionIds: [],
     children: [],
-    sectionData: getCriteriaData(
-      questionCriteria?.sectionData,
-      solutionType
-    ),
+    sectionData: getCriteriaData(questionCriteria?.sectionData, solutionType),
     type: "nonmatrix",
     branchingLogic: {},
     allowMultipleInstances: "",
     instances: {},
-    nodesModified: {}
-  }
-}
-
+    nodesModified: {},
+  };
+};
 
 module.exports = {
   createProgramAndQuestionsets,
   getAllCriterias,
-  migrateQuestionset
+  migrateQuestionset,
 };

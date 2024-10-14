@@ -7,10 +7,10 @@ const fs = require("fs");
 const { searchUser, getOpenSaberUserOrgId } = require("./api-list/user");
 
 /**
-* To get the userData from creation portal
-* @method
-* @name getUserIds
-**/
+ * To get the userData from creation portal
+ * @method
+ * @name getUserIds
+ **/
 const getUserIds = async () => {
   try {
     const db = await createDBInstance();
@@ -22,7 +22,7 @@ const getUserIds = async () => {
 
     const userIds = data.map((solution) => solution.author);
     const solutions = data.map((solution) => {
-      const programName = `${solution.name} sourcing project`
+      const programName = `${solution.name} sourcing project`;
       return {
         userId: solution.author,
         solutionId: solution._id,
@@ -39,7 +39,7 @@ const getUserIds = async () => {
     console.log(`\n migratedCount userIds`, d);
   } catch (err) {
     console.log(`Error while migrating : ${err}`);
-    throw new Error("Error occured", err);
+    throw new Error("Error occurred", err);
   }
 };
 
@@ -116,7 +116,9 @@ const extractAsCSV = (users, usersIdsInDb, openSaberOrg, solutions) => {
     const org = openSaberOrg.find((o) => o.createdBy === id);
     return `${id},${match?.userId || ""},${match?.userName || ""},${
       match?.rootOrgId || ""
-    },${match?.rootOrgName || ""},${org?.orgId || ""},${""},${""},${""},${""},,${solution?.programId || ""},${
+    },${match?.rootOrgName || ""},${
+      org?.orgId || ""
+    },${""},${""},${""},${""},,${solution?.programId || ""},${
       solution?.programName || ""
     }`;
   });

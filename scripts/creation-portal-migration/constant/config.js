@@ -18,8 +18,8 @@ const CONFIG = {
   APIS: {
     token: "auth/realms/sunbird/protocol/openid-connect/token",
     read_user: "api/user/v5/read",
-    search_user:"api/user/v3/search",
-    open_saber_user_org_search:  "api/reg/search",
+    search_user: "api/user/v3/search",
+    open_saber_user_org_search: "api/reg/search",
     create_questionset: "api/questionset/v1/create",
     update_hierarchy: "api/questionset/v1/hierarchy/update",
     publish_questionset: "api/questionset/v1/publish",
@@ -27,10 +27,10 @@ const CONFIG = {
     create_question: "api/question/v1/create",
     publish_question: "api/question/v1/publish",
     create_program: "api/program/v1/create",
-    update_program:"api/program/v1/update",
+    update_program: "api/program/v1/update",
     add_program_nomination: "api/program/v1/nomination/add",
     update_program_nomination: "api/program/v1/nomination/update",
-    publish_program:"api/program/v1/publish",
+    publish_program: "api/program/v1/publish",
   },
   KEYS: {
     ED: {

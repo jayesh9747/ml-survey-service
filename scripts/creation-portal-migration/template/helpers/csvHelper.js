@@ -5,15 +5,16 @@ const path = require("path");
 const logger = require("../../logger");
 
 /**
-* To get solution author and org details
-* @method
-* @name getCsvData
-* @param {Object} solution - question
-* @returns {Object} - returns csv data
-**/
+ * To get solution author and org details
+ * @method
+ * @name getCsvData
+ * @param {Object} solution - question
+ * @returns {Object} - returns csv data
+ **/
 const getCsvData = async (solution) => {
   const filePath = __dirname.split("/creation-portal-migration/template");
-  const filename = path.resolve(filePath[0]) + "/creation-portal-migration/SL-DataMapping.csv";
+  const filename =
+    path.resolve(filePath[0]) + "/creation-portal-migration/SL-DataMapping.csv";
   let srcOrgAdmin = [];
   return new Promise(async (resolve, reject) => {
     const data = [];
@@ -57,23 +58,29 @@ const getCsvData = async (solution) => {
 };
 
 /**
-* To update csv file with solution programId
-* @method
-* @name updateCsvFile
-* @param {any[]} csvData - csvData
-* @param {Object} columnToUpdate - columnToUpdate
-* @param {String} programId - programId
-* @param {String} programName - programName
-* @returns {Object} - returns csv data
-**/
-const updateCsvFile = async (csvData = [], columnToUpdate, programId, programName) => {
+ * To update csv file with solution programId
+ * @method
+ * @name updateCsvFile
+ * @param {any[]} csvData - csvData
+ * @param {Object} columnToUpdate - columnToUpdate
+ * @param {String} programId - programId
+ * @param {String} programName - programName
+ * @returns {Object} - returns csv data
+ **/
+const updateCsvFile = async (
+  csvData = [],
+  columnToUpdate,
+  programId,
+  programName
+) => {
   const filename = __dirname + "/SL-DataMapping.csv";
   const data = await csvtojson().fromString(csvData);
 
   let header = Object.keys(data[0]);
   const csvD = [];
   data.forEach((d) => {
-    d?.rootOrgId === columnToUpdate?.rootOrgId && (d.programId = programId, d.programName = programName);
+    d?.rootOrgId === columnToUpdate?.rootOrgId &&
+      ((d.programId = programId), (d.programName = programName));
     csvD.push(Object.values(d));
   });
 
@@ -88,14 +95,13 @@ const updateCsvFile = async (csvData = [], columnToUpdate, programId, programNam
 };
 
 /**
-* To get solution author details from csv
-* @method
-* @name getContributorAndSrcAdminData
-* @param {Object} solution - solution
-* @returns {Object} - returns csv data
-**/
+ * To get solution author details from csv
+ * @method
+ * @name getContributorAndSrcAdminData
+ * @param {Object} solution - solution
+ * @returns {Object} - returns csv data
+ **/
 const getContributorAndSrcAdminData = async (solution) => {
-
   // get csv data for the solution
   const csv = await getCsvData(solution);
 

@@ -275,8 +275,8 @@ const questionTemplate = {
 };
 
 const questionStatic = {
-  date: [ "mimeType", "responseDeclaration"],
-  slider: [ "mimeType", "responseDeclaration"],
+  date: ["mimeType", "responseDeclaration"],
+  slider: ["mimeType", "responseDeclaration"],
   multiselect: [
     "mimeType",
     "primaryCategory",
@@ -294,7 +294,7 @@ const questionStatic = {
     "primaryCategory",
     "interactionTypes",
     "responseDeclaration",
-  ]
+  ],
 };
 
 module.exports = {

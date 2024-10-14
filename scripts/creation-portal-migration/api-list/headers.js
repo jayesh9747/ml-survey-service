@@ -3,52 +3,52 @@ const { CONFIG } = require("../constant/config");
 const querystring = require("query-string");
 const jwt = require("jsonwebtoken");
 const logger = require("../logger");
-const constants = require('../constant')
+const constants = require("../constant");
 
 /**
-* To generate the user token
-* @method
-* @name genToken
-* @param {String} url - url 
-* @param {querystring} body - body 
-* @param {String} type - type
-* 
-  * @returns {string} - Generates the user token
-*/
-const genToken = async (url, body, type) => {
-  const isValid = await validateToken(type);
+ * To generate the user token
+ * @method
+ * @name genToken
+ * @param {String} url - url
+ * @param {querystring} body - body
+ * @param {String} type - type of token ( ED || Creation-portal )
+ *
+ * @returns {string} - Generates the user token
+ */
+const generateToken = async (url, body, type) => {
+  const isValid = await isAValidToken(type);
 
   const headers = {
-    "Content-Type": "application/x-www-form-urlencoded",
+    "Content-Type": constants.APPLICATION_URL_ENCODED,
   };
 
   if (!isValid) {
     const res = await axios.post(url, body, headers).catch((err) => {
-      logger.error(`Error while generateToken Error: ${JSON.stringify(err?.response?.data)}`)
+      logger.error(
+        `Error while generateToken Error: ${JSON.stringify(
+          err?.response?.data
+        )}`
+      );
       return err;
     });
     return res ? res?.data?.access_token : "";
   } else {
     const token = this.ed_token;
-    // type === constants.ED ? this.ed_token : this.ed_token
-    // this.creation_portal_token;
-
     return token;
   }
 };
 
 /**
-* To validate the user token
-* @method
-* @name validateToken
-* @param {String} type - type
-* 
-  * @returns {Boolean} - Returns the boolean response  
-*/
+ * To validate the user token
+ * @method
+ * @name isAValidToken
+ * @param {String} type - type of token ( ED || Creation-portal )
+ *
+ * @returns {Boolean} - Returns the boolean
+ */
 
-const validateToken = (type) => {
+const isAValidToken = (type) => {
   const token = type === constants.ED ? this.ed_token : this.ed_token;
-  // creation_portal_token;
 
   try {
     if (token) {
@@ -65,68 +65,57 @@ const validateToken = (type) => {
 };
 
 /**
-* prepare the reqbody and calls the generate token  
-* @method
-* @name generateToken
-* @param {String} type - type
-* 
-  * @returns {string} - Returns the user token
-*/
+ * prepare the req-body and calls the generate token
+ * @method
+ * @name generateUserToken
+ * @param {String} type - type
+ *
+ * @returns {string} - Returns the user token
+ */
 
-const generateToken = async (type) => {
+const generateUserToken = async (type) => {
   let url = "";
   let body = {};
-  url = CONFIG.HOST.ed + CONFIG.APIS.token;
+
   switch (type) {
     case constants.ED:
-      // url = CONFIG.HOST.ed + CONFIG.APIS.token;
+      url = CONFIG.HOST.ed + CONFIG.APIS.token;
       body = querystring.stringify({ ...CONFIG.KEYS.ED.QUERY });
-      this.ed_token = await genToken(url, body, constants.ED);
+      this.ed_token = await generateToken(url, body, constants.ED);
       return this.ed_token;
     case constants.CREATION_PORTAL:
-      // url = CONFIG.HOST.creation_portal + CONFIG.APIS.token;
+      url = CONFIG.HOST.creation_portal + CONFIG.APIS.token;
       body = querystring.stringify({ ...CONFIG.KEYS.CREATION_PORTAL.QUERY });
-      this.creation_portal_token = await genToken(url, body, constants.CREATION_PORTAL);
+      this.creation_portal_token = await generateToken(
+        url,
+        body,
+        constants.CREATION_PORTAL
+      );
       return this.creation_portal_token;
   }
 };
 
 /**
-* get headers based on the environment
-* @method
-* @name getHeaders
-* @param {String} type - type
-* @param {Boolean} isTokenReq - isTokenReq
-* 
-  * @returns {Object} - Returns the headers
-*/
+ * get headers based on the environment
+ * @method
+ * @name getHeaders
+ * @param {String} type - type
+ * @param {Boolean} isTokenRequired - isTokenReq
+ *
+ * @returns {Object} - Returns the headers
+ */
 
-const getHeaders = async (isTokenReq, type) => {
-  let headers = {};
+const getHeaders = async (isTokenRequired, type) => {
+  const commonHeaders = {
+    "Content-Type": constants.APPLICATION_JSON,
+    Authorization: CONFIG.KEYS[type]?.AUTHORIZATION,
+  };
 
-  switch (type) {
-    case constants.ED:
-      headers = {
-        "Content-Type": "application/json",
-        Authorization: CONFIG.KEYS.ED.AUTHORIZATION,
-      };
-      if (isTokenReq) {
-        headers["x-authenticated-user-token"] = await generateToken(constants.ED);
-      }
-      break;
-
-    case constants.CREATION_PORTAL:
-      headers = {
-        "Content-Type": "application/json",
-        Authorization: CONFIG.KEYS.CREATION_PORTAL.AUTHORIZATION,
-      };
-      if (isTokenReq) {
-        headers["x-authenticated-user-token"] = await generateToken(constants.CREATION_PORTAL);
-      }
-      break;
+  if (isTokenRequired) {
+    commonHeaders["x-authenticated-user-token"] = await generateUserToken(type);
   }
 
-  return headers;
+  return commonHeaders;
 };
 
 module.exports = {

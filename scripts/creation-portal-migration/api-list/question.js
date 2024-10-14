@@ -2,7 +2,9 @@ const { default: axios } = require("axios");
 const { CONFIG } = require("../constant/config");
 const logger = require("../logger");
 const { getHeaders } = require("./headers");
-const constants = require('../constant');
+const constants = require("../constant");
+
+const creation_portal_url = CONFIG.HOST.creation_portal;
 
 // Questionset
 /**
@@ -49,7 +51,7 @@ const constants = require('../constant');
   * @returns {JSON} - Creates questionset from questionset template
 */
 const createQuestionSet = async (templateData) => {
-  const url = CONFIG.HOST.creation_portal + CONFIG.APIS.create_questionset;
+  const url = creation_portal_url + CONFIG.APIS.create_questionset;
   const data = {
     request: {
       questionset: { ...templateData },
@@ -144,7 +146,7 @@ const createQuestionSet = async (templateData) => {
     
 */
 const updateQuestionSetHierarchy = async (templateData) => {
-  const url = CONFIG.HOST.creation_portal + CONFIG.APIS.update_hierarchy;
+  const url = creation_portal_url + CONFIG.APIS.update_hierarchy;
 
   const config = {
     method: "patch",
@@ -158,19 +160,16 @@ const updateQuestionSetHierarchy = async (templateData) => {
 };
 
 /**
-* To publish the question set in creation portal
-* @method
-* @name publishQuestionSet
-* @param {String} questionsetId - do_21376461469939302415285
-* 
-* @returns {String} - response: "do_21376461469939302415285"  
-*/
+ * To publish the question set in creation portal
+ * @method
+ * @name publishQuestionSet
+ * @param {String} questionsetId - do_21376461469939302415285
+ *
+ * @returns {String} - response: "do_21376461469939302415285"
+ */
 const publishQuestionSet = async (questionsetId) => {
   const url =
-    CONFIG.HOST.creation_portal +
-    CONFIG.APIS.publish_questionset +
-    "/" +
-    questionsetId;
+    creation_portal_url + CONFIG.APIS.publish_questionset + "/" + questionsetId;
   const config = {
     method: "post",
     url: url,
@@ -183,16 +182,16 @@ const publishQuestionSet = async (questionsetId) => {
 };
 
 /**
-* To read the questionset from creation portal
-* @method
-* @name readQuestionSetHierarchy
-* @param {String} questionsetId - do_21376461469939302415285
-* 
-* @returns {JSON} - returns questionset with hierarchy
-*/
+ * To read the questionset from creation portal
+ * @method
+ * @name readQuestionSetHierarchy
+ * @param {String} questionsetId - do_21376461469939302415285
+ *
+ * @returns {JSON} - returns questionset with hierarchy
+ */
 const readQuestionSetHierarchy = async (questionSetId) => {
   const url =
-    CONFIG.HOST.creation_portal +
+    creation_portal_url +
     CONFIG.APIS.read_questionset +
     questionSetId +
     "?mode=edit";
@@ -200,7 +199,7 @@ const readQuestionSetHierarchy = async (questionSetId) => {
   const config = {
     method: "get",
     url: url,
-    headers: await getHeaders(true,constants.CREATION_PORTAL),
+    headers: await getHeaders(true, constants.CREATION_PORTAL),
   };
 
   const res = await axios(config);
@@ -209,15 +208,15 @@ const readQuestionSetHierarchy = async (questionSetId) => {
 
 // Questions
 /**
-* To create the questions in creation portal
-* @method
-* @name createQuestions
-* @param {String} questionId - do_213771658975903744111423
-* @param {Object} templateData - {"name":"What medium of instruction would you prefer for trainings?","code":"PS25_1597311656239","description":"","showRemarks":"Yes","mimeType":"application/vnd.sunbird.question","primaryCategory":"Multiselect Multiple Choice Question","interactionTypes":["choice"],"body":"<div class='question-body'><div class='mcq-title'><p>What medium of instruction would you prefer for trainings?&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div><div class='mcq-title'><p>&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div></div>","interactions":{"validation":{"required":"Yes"},"response1":{"type":"choice","options":[{"value":"R1","label":"English"},{"value":"R2","label":"Hindi"},{"value":"R3","label":"Bi-lingual"}]}},"editorState":{"question":"<div class='question-body'><div class='mcq-title'><p>What medium of instruction would you prefer for trainings?&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div><div class='mcq-title'><p>&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div></div>","options":[{"answer":false,"value":{"body":"<p>English</p>","value":0}},{"answer":false,"value":{"body":"<p>Hindi</p>","value":1}},{"answer":false,"value":{"body":"<p>Bi-lingual</p>","value":2}}]},"responseDeclaration":{"response1":{"maxScore":0,"cardinality":"single","type":"integer","correctResponse":{"outcomes":{"SCORE":0}}}},"instructions":{"default":""},"hints":"","evidence":{"mimeType":[]}}
-* @returns {JSON} - creates the question with question template
-*/
+ * To create the questions in creation portal
+ * @method
+ * @name createQuestions
+ * @param {String} questionId - do_213771658975903744111423
+ * @param {Object} templateData - {"name":"What medium of instruction would you prefer for trainings?","code":"PS25_1597311656239","description":"","showRemarks":"Yes","mimeType":"application/vnd.sunbird.question","primaryCategory":"Multiselect Multiple Choice Question","interactionTypes":["choice"],"body":"<div class='question-body'><div class='mcq-title'><p>What medium of instruction would you prefer for trainings?&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div><div class='mcq-title'><p>&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div></div>","interactions":{"validation":{"required":"Yes"},"response1":{"type":"choice","options":[{"value":"R1","label":"English"},{"value":"R2","label":"Hindi"},{"value":"R3","label":"Bi-lingual"}]}},"editorState":{"question":"<div class='question-body'><div class='mcq-title'><p>What medium of instruction would you prefer for trainings?&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div><div class='mcq-title'><p>&nbsp</p></div><div data-choice-interaction='response1' class='mcq-vertical'></div></div>","options":[{"answer":false,"value":{"body":"<p>English</p>","value":0}},{"answer":false,"value":{"body":"<p>Hindi</p>","value":1}},{"answer":false,"value":{"body":"<p>Bi-lingual</p>","value":2}}]},"responseDeclaration":{"response1":{"maxScore":0,"cardinality":"single","type":"integer","correctResponse":{"outcomes":{"SCORE":0}}}},"instructions":{"default":""},"hints":"","evidence":{"mimeType":[]}}
+ * @returns {JSON} - creates the question with question template
+ */
 const createQuestions = async (templateData, questionId) => {
-  const url = CONFIG.HOST.creation_portal + CONFIG.APIS.create_question;
+  const url = creation_portal_url + CONFIG.APIS.create_question;
   const data = {
     request: {
       question: { ...templateData },
@@ -237,25 +236,22 @@ const createQuestions = async (templateData, questionId) => {
 };
 
 /**
-* To publish the question in creation portal
-* @method
-* @name publishQuestion
-* @param {String} questionId - do_21376461469939302415285
-* @returns {JSON} - publish the question in creation portal
-*/
+ * To publish the question in creation portal
+ * @method
+ * @name publishQuestion
+ * @param {String} questionId - do_21376461469939302415285
+ * @returns {JSON} - publish the question in creation portal
+ */
 const publishQuestion = async (questionId) => {
   const url =
-    CONFIG.HOST.creation_portal +
-    CONFIG.APIS.publish_question +
-    "/" +
-    questionId;
+    creation_portal_url + CONFIG.APIS.publish_question + "/" + questionId;
   const config = {
     method: "post",
     url: url,
-    headers: await getHeaders(true,constants.CREATION_PORTAL)
+    headers: await getHeaders(true, constants.CREATION_PORTAL),
   };
 
-  const res = await axios(config)
+  const res = await axios(config);
   return res?.data?.result?.identifier;
 };
 

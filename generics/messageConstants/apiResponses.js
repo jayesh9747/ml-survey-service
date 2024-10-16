@@ -381,5 +381,6 @@ module.exports = {
     "EVIDENCE_FETCHED" : "Evidence fetched Successfully.",
     "PAGE_QUESTION_FETCHED" : "Page Questions fetched Successfully.",
     "FAILED_TO_UPDATE_QUESTIONSET" : "Failed to update the Questionset",
-    "FAILED_TO_PUBLISH_QUESTIONSET" : "Failed to publish the Questionset"
+    "FAILED_TO_PUBLISH_QUESTIONSET" : "Failed to publish the Questionset",
+    "OBSERVATION_OVERVIEW_INFORMATION_FETCHED":'Observation overview information fetched successfully'
 }

@@ -1,5 +1,5 @@
 /**
- * name : mongodb.js.
+ * name : redis.js.
  * author : Jayesh Savaliya.
  * created-date : 09-Aug-2024.
  * Description : Redis health check.

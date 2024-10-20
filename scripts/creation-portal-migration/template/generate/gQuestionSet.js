@@ -465,13 +465,13 @@ const getAllCriterias = async (
 };
 
 /**
- * Separate the matrix and nonmatrix questions
+ * Separate the matrix and non-matrix questions
  * @method
  * @name getMatrixAndNonMatrixQuestions
  * @param {Object[]} questions - questions
  * @param {String[]} matrixQueIds - matrixQueIds (objectId's) in mongo
  * @param {String[]} nonMatrixQueIds - nonMatrixQueIds (objectId's) in mongo
- * @returns {JSON} returns matrix and nonmatrix questionIds in mongo
+ * @returns {JSON} returns matrix and non-matrix questionIds in mongo
  **/
 
 const getMatrixAndNonMatrixQuestions = (
@@ -527,7 +527,7 @@ const getMatrixAndNonMatrixQuestions = (
  * @param {Object[]} sections - newly mapped sections to update the hierarchy
  * @param {Object[]} existingCriteriaQuestions - current criteria questions
  * @param {Object} migratedCount - migratedCount to increment migration count
- * @returns {JSON} returns the updated matrix sections and incremented the migratedcount object
+ * @returns {JSON} returns the updated matrix sections and incremented the migratedCount object
  **/
 
 const getMatrixSectionData = async (
@@ -655,8 +655,6 @@ const getMatrixSectionData = async (
           },
         });
 
-        // here add the csv file
-
         sections[questionCriteria?.sectionId].children = [
           ...sections[questionCriteria?.sectionId].children,
           migratedQuestion?.referenceQuestionId,
@@ -699,8 +697,8 @@ const getNonMatrixSectionData = async (
   nonMatrixQuestionIds,
   allQuestionsFromAllSections,
   solutionType,
-  solutionId, // solution-id
-  referenceQuestionsetId, // migrated-solution-id
+  solutionId, 
+  referenceQuestionsetId, 
   sections,
   existingCriteriaQuestions,
   migratedCount

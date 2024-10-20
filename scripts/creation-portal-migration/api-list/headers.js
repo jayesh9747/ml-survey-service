@@ -23,18 +23,17 @@ const generateToken = async (url, body, type) => {
   };
 
   if (!isValid) {
-    const res = await axios.post(url, body, headers).catch((err) => {
+    try {
+      const res = await axios.post(url, body, { headers });
+      return res?.data?.access_token || "";
+    } catch (err) {
       logger.error(
-        `Error while generateToken Error: ${JSON.stringify(
-          err?.response?.data
-        )}`
+        `Error while generating token for type ${type}: ${JSON.stringify(err?.response?.data)}`
       );
-      return err;
-    });
-    return res ? res?.data?.access_token : "";
+      return "";
+    }
   } else {
-    const token = this.ed_token;
-    return token;
+    return this[type === constants.ED ? 'ed_token' : 'creation_portal_token'];
   }
 };
 
@@ -48,21 +47,20 @@ const generateToken = async (url, body, type) => {
  */
 
 const isAValidToken = (type) => {
-  const token = type === constants.ED ? this.ed_token : this.ed_token;
+  const token = type === constants.ED ? this.ed_token : this.creation_portal_token;
 
   try {
     if (token) {
       const decoded = jwt.decode(token, { header: true });
-      if (Date.now() >= decoded?.exp * 1000) {
-        return false;
-      }
-      return true;
+      return Date.now() < (decoded?.exp * 1000);
     }
     return false;
   } catch (err) {
+    logger.error(`Error while validating token for type ${type}: ${err.message}`);
     return false;
   }
 };
+
 
 /**
  * prepare the req-body and calls the generate token
@@ -92,6 +90,9 @@ const generateUserToken = async (type) => {
         constants.CREATION_PORTAL
       );
       return this.creation_portal_token;
+    default:
+      logger.error(`Invalid token type requested: ${type}`);
+      return "";
   }
 };
 
@@ -112,7 +113,12 @@ const getHeaders = async (isTokenRequired, type) => {
   };
 
   if (isTokenRequired) {
-    commonHeaders["x-authenticated-user-token"] = await generateUserToken(type);
+    const token = await generateUserToken(type);
+    if (token) {
+      commonHeaders["x-authenticated-user-token"] = token;
+    } else {
+      logger.error(`Failed to retrieve token for type ${type}`);
+    }
   }
 
   return commonHeaders;

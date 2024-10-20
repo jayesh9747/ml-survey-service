@@ -54,7 +54,7 @@ const updateById = async (clName, id, query) => {
         { upsert: true }
       );
   } catch (err) {
-    logger.error(`"updateById  = ", ${id}, "Error: ", ${err}`);
+    logger.error(`Failed to update document in collection '${clName}' with ID '${id}'. Query: ${JSON.stringify(query)}. Error: ${err.message}`);
   }
 };
 

@@ -34,6 +34,7 @@ const writeCSV = async (data) => {
 };
 
 /**
+* update the csv with mapping question with status
 * @method
 * @name updateQuestionMappingCSV
 * @param {Object} inputData - {

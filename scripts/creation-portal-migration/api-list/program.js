@@ -2,12 +2,12 @@ const { default: axios } = require("axios");
 const { CONFIG } = require("../constant/config");
 const { getHeaders } = require("./headers");
 const constants = require("../constant");
+const logger = require("../logger");
 
 const creation_portal_url = CONFIG.HOST.creation_portal;
 
 /**
 * To create the program in creation portal
-* 'x-authenticated-user-token' is not required for creation portal
 * @method
 * @name createProgram
 * @param {Object} templateData - {
@@ -57,25 +57,36 @@ const creation_portal_url = CONFIG.HOST.creation_portal;
     }
 }
 * 
-  * @returns {JSON} - Creates a program from program template
+* @returns {string} - return ProgramId 
 */
 const createProgram = async (templateData) => {
-  const url = creation_portal_url + CONFIG.APIS.create_program;
-  const data = {
-    request: {
-      ...templateData,
-    },
-  };
-  const config = {
-    method: "post",
-    url: url,
-    headers: await getHeaders(false, constants.CREATION_PORTAL),
-    data: data,
-  };
+  try {
+    const url = creation_portal_url + CONFIG.APIS.create_program;
+    const data = {
+      request: {
+        ...templateData,
+      },
+    };
+    const config = {
+      method: "post",
+      url: url,
+      headers: await getHeaders(false, constants.CREATION_PORTAL),
+      data: data,
+    };
 
-  const res = await axios(config);
+    const res = await axios(config);
 
-  return res?.data?.result?.program_id;
+    if (res?.status === 200) {
+      return res?.data?.result?.program_id;
+    } else {
+      throw new Error("Unexpected response status");
+    }
+  } catch (error) {
+    const errorResponse = err?.response?.data;
+    logger.error(
+      `Error while creating program, Error : ${errorResponse?.responseCode} -${errorResponse.params?.errmsg} `
+    );
+  }
 };
 
 /**
@@ -137,23 +148,36 @@ const createProgram = async (templateData) => {
     }
 }
 * 
-  * @returns {JSON} - Updates the program with the updated program template
+*  @returns {JSON} - Updates the program with the updated program template
 */
 const updateProgram = async (templateData) => {
-  const url = creation_portal_url + CONFIG.APIS.update_program;
-  const data = {
-    request: {
-      ...templateData,
-    },
-  };
-  const config = {
-    method: "post",
-    url: url,
-    headers: await getHeaders(false, constants.CREATION_PORTAL),
-    data: data,
-  };
-  const res = await axios(config);
-  return res.data;
+  try {
+    const url = creation_portal_url + CONFIG.APIS.update_program;
+    const data = {
+      request: {
+        ...templateData,
+      },
+    };
+    const config = {
+      method: "post",
+      url: url,
+      headers: await getHeaders(false, constants.CREATION_PORTAL),
+      data: data,
+    };
+
+    const res = await axios(config);
+
+    if (res?.status === 200) {
+      return res?.data;
+    } else {
+      throw new Error("Unexpected response status");
+    }
+  } catch (error) {
+    const errorResponse = err?.response?.data;
+    logger.error(
+      `Error while updating program, Error : ${errorResponse?.responseCode} -${errorResponse.params?.errmsg} `
+    );
+  }
 };
 
 /**
@@ -168,24 +192,36 @@ const updateProgram = async (templateData) => {
     }
 }
 * 
-  * @returns {JSON} - Published the program 
+* @returns {JSON} - Published the program 
 */
 const publishProgram = async (templateData) => {
-  const url = creation_portal_url + CONFIG.APIS.publish_program;
-  const data = {
-    request: {
-      ...templateData,
-    },
-  };
-  const config = {
-    method: "post",
-    url: url,
-    headers: await getHeaders(false, constants.CREATION_PORTAL),
-    data: data,
-  };
+  try {
+    const url = creation_portal_url + CONFIG.APIS.publish_program;
+    const data = {
+      request: {
+        ...templateData,
+      },
+    };
+    const config = {
+      method: "post",
+      url: url,
+      headers: await getHeaders(false, constants.CREATION_PORTAL),
+      data: data,
+    };
 
-  const res = await axios(config);
-  return res.data;
+    const res = await axios(config);
+
+    if (res?.status === 200) {
+      return res?.data;
+    } else {
+      throw new Error("Unexpected response status");
+    }
+  } catch (error) {
+    const errorResponse = err?.response?.data;
+    logger.error(
+      `Error while publishing program, Error : ${errorResponse?.responseCode} -${errorResponse.params?.errmsg} `
+    );
+  }
 };
 
 /**
@@ -218,43 +254,56 @@ const publishProgram = async (templateData) => {
     }
 }
 * 
-  * @returns {JSON} - Nominates the program
+* @returns {JSON} - Nominates the program
 **/
 const nominateProgram = async (program_id, orgAdmin) => {
-  const url = creation_portal_url + CONFIG.APIS.add_program_nomination;
-  const data = {
-    request: {
-      program_id: program_id,
-      status: "Pending",
-      collection_ids: [],
-      createdby: orgAdmin?.srcOrgAdminId,
-      targetprimarycategories: [
-        {
-          name: "Observation",
-          identifier: "obj-cat:observation_questionset_all",
-          targetObjectType: "QuestionSet",
-        },
-        {
-          name: "Survey",
-          identifier: "obj-cat:survey_questionset_all",
-          targetObjectType: "QuestionSet",
-        },
-      ],
-      content_types: [],
-      organisation_id: orgAdmin?.org_id,
-      user_id:
-        orgAdmin?.mappedUserId || process.env.DEFAULT_CONTRIBUTOR_ORG_ADMIN_ID,
-    },
-  };
-  const config = {
-    method: "post",
-    url: url,
-    headers: await getHeaders(true, constants.CREATION_PORTAL),
-    data: data,
-  };
+  try {
+    const url = creation_portal_url + CONFIG.APIS.add_program_nomination;
+    const data = {
+      request: {
+        program_id: program_id,
+        status: "Pending",
+        collection_ids: [],
+        createdby: orgAdmin?.srcOrgAdminId,
+        targetprimarycategories: [
+          {
+            name: "Observation",
+            identifier: "obj-cat:observation_questionset_all",
+            targetObjectType: "QuestionSet",
+          },
+          {
+            name: "Survey",
+            identifier: "obj-cat:survey_questionset_all",
+            targetObjectType: "QuestionSet",
+          },
+        ],
+        content_types: [],
+        organisation_id: orgAdmin?.org_id,
+        user_id:
+          orgAdmin?.mappedUserId ||
+          process.env.DEFAULT_CONTRIBUTOR_ORG_ADMIN_ID,
+      },
+    };
+    const config = {
+      method: "post",
+      url: url,
+      headers: await getHeaders(true, constants.CREATION_PORTAL),
+      data: data,
+    };
 
-  const res = await axios(config);
-  return res.data;
+    const res = await axios(config);
+
+    if (res?.status === 200) {
+      return res?.data;
+    } else {
+      throw new Error("Unexpected response status");
+    }
+  } catch (error) {
+    const errorResponse = error?.response?.data;
+    logger.error(
+      `Error while nominating program, Error: ${errorResponse?.responseCode} - ${errorResponse?.params?.errmsg}`
+    );
+  }
 };
 
 /**
@@ -277,25 +326,37 @@ const nominateProgram = async (program_id, orgAdmin) => {
     }
 }
 * 
-  * @returns {JSON} - updates the contributor to the program
+* @returns {JSON} - updates the contributor to the program
 **/
 const updateContributorToProgram = async (reqData) => {
-  const url = creation_portal_url + CONFIG.APIS.update_program_nomination;
-  const data = {
-    request: {
-      ...reqData,
-    },
-  };
+  try {
+    const url = creation_portal_url + CONFIG.APIS.update_program_nomination;
+    const data = {
+      request: {
+        ...reqData,
+      },
+    };
 
-  const config = {
-    method: "post",
-    url: url,
-    headers: await getHeaders(true, constants.CREATION_PORTAL),
-    data: data,
-  };
+    const config = {
+      method: "post",
+      url: url,
+      headers: await getHeaders(true, constants.CREATION_PORTAL),
+      data: data,
+    };
 
-  const res = await axios(config);
-  return res.data;
+    const res = await axios(config);
+
+    if (res?.status === 200) {
+      return res?.data;
+    } else {
+      throw new Error("Unexpected response status");
+    }
+  } catch (error) {
+    const errorResponse = error?.response?.data;
+    logger.error(
+      `Error while updating contributor to  program, Error: ${errorResponse?.responseCode} - ${errorResponse?.params?.errmsg}`
+    );
+  }
 };
 
 module.exports = {
